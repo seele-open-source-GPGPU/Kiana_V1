@@ -28,7 +28,7 @@ module decode(
             opcode<=8'hff;
             imm<=0;
             feature_flags<=0;
-            warp_id_out<=0;
+            warp_id_out<=0; 
             err<=0;
             m_tlast<=0;
         end

@@ -4,6 +4,7 @@ module fetch(
     input clk,
     input rst_n,
     input initialize,
+
     input [31:0] next_pc[32],
     input [4:0] warp_id[32],
     input [31:0] warp_mask,
@@ -14,7 +15,12 @@ module fetch(
     output logic s_tready,
     output logic m_tvalid,
     output logic m_tlast,
-    output logic[31:0] err // err[0] ERR_INVALID_WARP_MASK
+    output logic[31:0] err, // err[0] ERR_INVALID_WARP_MASK
+
+    output logic [4:0] warp_id_update_pc,
+    output logic m_tvalid_update_queue,
+    output logic m_tlast_update_queue,
+    input update_queue_valid
 );
     logic [31:0] warp_mask_reg,_warp_mask_reg;
     logic [4:0] last_idx;
@@ -43,26 +49,31 @@ module fetch(
             busy<=0;
             err<=0;
             m_tlast<=0;
+            warp_id_update_pc<=0;
+            m_tvalid_update_queue<=0;
+            m_tlast_update_queue<=0;
         end 
         else begin
+            err<=0;
             if(initialize) begin
                 warp_id_reg<=warp_id;
                 pc_reg<=next_pc;
                 m_tvalid<=0;
-                s_tready<=1;
+                s_tready<=update_queue_valid;
                 m_tlast<=0;
             end
-            else begin
+            else if(update_queue_valid) begin
                 s_tready<=1;
                 m_tvalid<=0;
                 m_tlast<=0;
                 if(s_tready && s_tvalid) begin
-                    _warp_mask_reg=warp_mask;
+                    warp_mask_reg<=warp_mask;
                     busy<=1;
-                    if(~(|_warp_mask_reg)) err<=`KIANA_SP_ERR_FETCHER_INVALID_WARP_MASK;
+                    if(~(|warp_mask)) err<=err | `KIANA_SP_ERR_FETCHER_INVALID_WARP_MASK;
                     s_tready<=0;
                 end
                 if(busy) begin
+                    _warp_mask_reg=warp_mask_reg;
                     s_tready<=0;
                     if(|_warp_mask_reg) begin
                         offset=last_idx+1;
@@ -83,6 +94,10 @@ module fetch(
                         selected_pc<=pc_reg[id_this_term];
                         pc_reg[id_this_term]<=next_pc[id_this_term];
                         busy<=1;
+
+                        m_tlast_update_queue<=~(|_warp_mask_reg);
+                        warp_id_update_pc<=id_this_term;
+                        m_tvalid_update_queue<=1;
                     end
                     else begin
                         busy<=0;
@@ -91,6 +106,11 @@ module fetch(
                     end
                 end
                 warp_mask_reg<=_warp_mask_reg;
+            end
+            else begin
+                busy<=0;
+                s_tready<=0;
+                m_tvalid<=0;
             end
         end
     end

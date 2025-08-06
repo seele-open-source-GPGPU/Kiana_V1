@@ -124,8 +124,6 @@ module tb_control();
     endclocking
     // 波形输出（可选）
     initial begin
-        // $dumpfile("../control_tb.vcd");
-        $dumpvars(0);
         rst_n=1;
         initialize=0;
         next_pc='{default:0};
@@ -142,7 +140,6 @@ module tb_control();
         cb.initialize<=0;
 
         repeat(60) @cb;
-        $dumpflush;
         #1 $finish;
     end
 endmodule 

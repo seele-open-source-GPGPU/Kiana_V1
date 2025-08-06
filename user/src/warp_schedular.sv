@@ -96,18 +96,18 @@ module warp_schedular(
                 case({instruction_buffer[selected_warp_id][0],instruction_buffer[selected_warp_id][1]})
                     2'b00:begin
                         if(m_tready_special) m_tvalid_special<=1;
-                        else err<=`KIANA_SP_ERR_DISPATCHER_INSTRUCTION_SELECTED_WITH_EXE_UNIT_NOT_READY;
+                        else err<=err | `KIANA_SP_ERR_DISPATCHER_INSTRUCTION_SELECTED_WITH_EXE_UNIT_NOT_READY;
                     end
                     2'b01:begin
                         if(m_tready_alu) m_tvalid_alu<=1;
-                        else err<=`KIANA_SP_ERR_DISPATCHER_INSTRUCTION_SELECTED_WITH_EXE_UNIT_NOT_READY;
+                        else err<=err | `KIANA_SP_ERR_DISPATCHER_INSTRUCTION_SELECTED_WITH_EXE_UNIT_NOT_READY;
                     end
                     2'b10:begin
                         if(m_tready_lsu) m_tvalid_lsu<=1;
-                        else err<=`KIANA_SP_ERR_DISPATCHER_INSTRUCTION_SELECTED_WITH_EXE_UNIT_NOT_READY;
+                        else err<=err | `KIANA_SP_ERR_DISPATCHER_INSTRUCTION_SELECTED_WITH_EXE_UNIT_NOT_READY;
                     end
                     default:begin
-                        err<=`KIANA_SP_ERR_DISPATCHER_BOTH_LSU_ALU_USED;
+                        err<=err | `KIANA_SP_ERR_DISPATCHER_BOTH_LSU_ALU_USED;
                     end
                 endcase
                 // 发射结果写回记分牌

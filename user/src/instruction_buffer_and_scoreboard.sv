@@ -134,7 +134,7 @@ module instruction_buffer_and_scoreboard(
             // 接收
             if(s_tvalid_decoder && waiting_for_feed_back) begin
                 // 开始传输
-                if(instruction_buffer_valid[warp_id_decoder]) err<=`KIANA_SP_ERR_INSTRUCTION_BUFFER_SLOT_WRONG_OVERRIDE;
+                if(instruction_buffer_valid[warp_id_decoder]) err<=err | `KIANA_SP_ERR_INSTRUCTION_BUFFER_SLOT_WRONG_OVERRIDE;
                 instruction_buffer_valid[warp_id_decoder]<=1;
                 if(s_tlast_decoder) begin
                     waiting_for_feed_back<=0;
