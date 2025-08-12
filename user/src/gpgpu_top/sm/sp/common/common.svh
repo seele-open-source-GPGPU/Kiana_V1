@@ -49,23 +49,24 @@ package common;
 endpackage
 
 package i_cache;
+  `define NUM_WARP 8 //the number of warp
   `define XLEN 32   // 数据位宽（例如 RISC-V XLEN = 32 位）
   `define NUM_FETCH 2    // 每次取指的指令数
-  `define DEPTH_WARP 5    // Warp ID 位宽（支持的 Warp 数量 = 2^DEPTH_WARP）
-  `define WIDBITS 5    // Warp ID 位宽（同 DEPTH_WARP，部分模块用这个名字）
+  `define DEPTH_WARP $clog2(`NUM_WARP)    // Warp ID 位宽（支持的 Warp 数量 = 2^DEPTH_WARP）
+  `define WIDBITS `DEPTH_WARP    // Warp ID 位宽（同 DEPTH_WARP，部分模块用这个名字）
 
-  `define DCACHE_BLOCKWORDS 8    // 每个 Cache Block 含多少个 word
-  `define DCACHE_TAGBITS 20   // Cache Tag 位数
-  `define DCACHE_SETIDXBITS 7    // Cache Set 索引位宽
-  `define DCACHE_WAYIDXBITS 2    // Cache Way 索引位宽（log2(DCACHE_NWAYS)）
-  `define DCACHE_NSETS 128  // Cache 中 Set 的数量
-  `define DCACHE_NWAYS 4    // Cache 的组相连数（几路组相连）
-  `define DCACHE_BLOCKOFFSETBITS 5   // block 内的 word 偏移位宽（log2(DCACHE_BLOCKWORDS)）
-  `define DCACHE_WORDOFFSETBITS 2    // word 内的 byte 偏移位宽（log2(XLEN/8)）
+  `define ICACHE_BLOCKWORDS 2    // 每个 Cache Block 含多少个 word
+  `define ICACHE_TAGBITS (`XLEN-(`ICACHE_SETIDXBITS+`ICACHE_BLOCKOFFSETBITS+`ICACHE_WORDOFFSETBITS))   // Cache Tag 位数
+  `define ICACHE_SETIDXBITS $clog2(`ICACHE_NSETS)    // Cache Set 索引位宽
+  `define ICACHE_WAYIDXBITS $clog2(`ICACHE_NWAYS)    // Cache Way 索引位宽（log2(ICACHE_NWAYS)）
+  `define ICACHE_NSETS 32  // Cache 中 Set 的数量
+  `define ICACHE_NWAYS 2    // Cache 的组相连数（几路组相连）
+  `define ICACHE_BLOCKOFFSETBITS 5$clog2(`ICACHE_BLOCKWORDS)   // block 内的 word 偏移位宽（log2(ICACHE_BLOCKWORDS)）
+  `define ICACHE_WORDOFFSETBITS 2    // word 内的 byte 偏移位宽（log2(XLEN/8)）
 
-  `define DCACHE_MSHRENTRY 8    // MSHR 表项数量
-  `define DCACHE_MSHRSUBENTRY 4    // MSHR 子表项数量
-  `define DCACHE_ENTRY_DEPTH 3    // MSHR 表项深度位宽
-  `define DCACHE_SUBENTRY_DEPTH 2    // MSHR 子表项深度位宽
+  `define ICACHE_MSHRENTRY 4    // MSHR 表项数量
+  `define ICACHE_MSHRSUBENTRY 2    // MSHR 子表项数量
+  `define ICACHE_ENTRY_DEPTH $clog2(`ICACHE_MSHRENTRY)    // MSHR 表项深度位宽
+  `define ICACHE_SUBENTRY_DEPTH $clog2(`ICACHE_MSHRSUBENTRY)    // MSHR 子表项深度位宽
 endpackage
 `endif
