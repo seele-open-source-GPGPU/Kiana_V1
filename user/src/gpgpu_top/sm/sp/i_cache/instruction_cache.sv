@@ -292,3 +292,66 @@ module instruction_cache (
     );
 
 endmodule
+
+
+//                                   +------------------- instruction_cache -------------------+
+//  Core输入                                                                                   |   下一级存储
+//   core_req_valid/addr/mask/wid --------------------------+                                  |   mem_req_*   (请求)
+//   flush_pipe_valid/wid ----------------------------------|----------------------------------|--->
+//                                                         (A)                                 | 
+//                                                         v                                  (E)
+//                                               +-----------------+                           |
+//                                               | get_setid (R)   |  r_setid: tagAccess_r_req_setid
+//                                               |  req→setid      |<----------------------+   |
+//                                               +-----------------+                        |  |
+//                                                         |                                |  |
+//                                                         |                                |  |
+//   +--------------------+   r_req_valid   +-----------------------------+                 |  |
+//   | addr_st1/tag       |<----------------|    tag_access_icache        |<---tagFromCore  |  |
+//   | (stage 寄存到 st1) |                 | - Tag SRAM + 有效位 + LRU    |    (addr_st1 高位) 
+//   +--------------------+                 |  - 命中比较 / 选替换路       |                 |  |
+//               |                          |                             |                 |  |
+//               |                          |   输出:                     |                 |  |
+//               |                          |    - wayid_hit_st1 (bin) ---+--+              |  |
+//               |                          |    - hit_st1_o                 |              |  |
+//               |                          |    - wayid_replacement_o ------+----+         |  |
+//               |                          +-----------------------------+       |         |  |
+//               |                                                             (B)|(C)      |  |
+//               |                                                                v v       |  |
+//               |                                                           +--------+     |  |
+//               |                                                           |bin2one |     |  |
+//               |                                                           +---+----+     |  |
+//               |                                                               |one-hot   |  |
+//               |                                                               |          |  |
+//     dataAccess_r_req_valid (与tag读同拍)                                       |          |  |
+//               |                                                               |          |  |
+// +-------------v------------------------------------------+                    |          |  |
+// |           dataAccess: 数据SRAM (组/路)                  |                    |          |  |
+// | GEN_WIDTH=BLOCK_BITS, NSETS, NWAYS                     |                    |          |  |
+// |  r_req_setid_i  <--- tagAccess_r_req_setid             |                    |          |  |
+// |  r_resp_data_o  ---> dataAccess_data                   |                    |          |  |
+// |  w_req_valid_i  <--- memRsp_fire                       |                    |          |  |
+// |  w_req_setid_i  <--- tagAccess_w_req_setid             |   w_waymask <------+          |  |
+// |  w_req_waymask_i<--- wayid_replace_st0_one  (C)        |                               |  |
+// |  w_req_data_i   <--- {NWAY{mem_rsp_d_data_o}}          |<------------------------------+  |
+// +--------------------------------------------------------+             (D) 回填数据
+
+//   命中路径：dataAccess_data --(用 wayid_hit_st1 选块)--> data_after_wayid_st1 -> 寄存到 st2 -> core_rsp_*
+
+//   未命中路径：                                                      +-------------------------------+
+//       cacheMiss_st1 = (!hit_st1_o && core_req_fire_st1)            |  mshr_icache                  |
+//                                                                    |  - 合并同块 miss               |
+// (A') mshrAccess_miss_req_block_addr = addr_st1>>(XLEN-(TAG+SET))   |  - entry/subentry 管理        |
+// (A") mshrAccess_miss_req_target_info = {wid_st1, addr_ofs}  ------>|  - 下发一次真实内存读          |----- mem_req_* (E)
+//                                                                    |  - 与回填地址配对              |
+//  回填入口：mem_rsp_valid_i/ready_o ->                              +-------------------------------+
+//              stream_fifo_pipe_true(memRsp) -> memRsp_valid/out ----------> mshrAccess.miss_rsp_in_* 
+//              （缓冲 {data, addr, source}）                                    |
+//                                                                              | miss_rsp_out_block_addr (已配对entry)
+//                                                                              v
+//   (W) get_setid (W) refill→setid: tagAccess_w_req_setid  <-------------------+
+//       tagAccess_w_req_data_scalar = refill_block_addr>>(BA_BITS-TAGBITS)
+//       tagAccess_w_req_data = {NWAY{tagAccess_w_req_data_scalar}}
+
+// mem_req_a_addr_o = {mshrAccess_miss2mem_block_addr, 0填充到XLEN}   （向下一级发读）
+// mem_req_a_source_o = mshrAccess_miss2mem_instr_id_o （通常是WID等）

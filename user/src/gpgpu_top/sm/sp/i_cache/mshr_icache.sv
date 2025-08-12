@@ -209,3 +209,36 @@ module mshr_icache #(
     );
 
 endmodule
+
+/*-----------------------------------------------------------------------------
+MSHR-ICACHE 概要说明
+功能：
+- 合并同块 I-Cache miss，减少下行请求：
+  * primary miss：分配新 entry，登记块地址与 subentry0，向下一级发一次读请求
+  * secondary miss：命中已有 entry，仅新增 subentry，等待回填
+- 回填到来时按块地址匹配 entry，清空 subentries，释放 entry
+
+核心状态机（单 entry 抽象）：
+  EMPTY
+    | primary miss
+    v
+  ALLOCATED_WAIT_SEND  (entry_valid=1, has_send2mem=0)
+    | miss2mem_fire
+    v
+  SENT_WAIT_RSP        (entry_valid=1, has_send2mem=1)
+    | miss_rsp_out_fire
+    v
+  EMPTY
+
+关键信号：
+- miss_req_*：登记 miss 请求，primary/secondary 判定 → entry_next 或 entryMatchMissReq_bin
+- miss2mem_*：从“有效且未发送”的 entry（has_send2mem=0）选出下发下行读请求
+- miss_rsp_in_* / miss_rsp_out_*：回填入口与出站握手；匹配 entryMatchMissRsp_bin，释放 entry
+- entry_valid = |subentry_valid[i,*]
+- has_send2mem[i]：标记该 entry 是否已下发过读请求
+- get_entry_status / one2bin：用于空位/目标查找和 one-hot 编码转换
+
+注意：
+- 同拍 req 与 rsp（同块或不同块）有额外条件 req_rsp_same_time 防止竞态
+- 全部存储结构按打平总线实现，查找逻辑为组合电路，fire 信号驱动寄存更新
+-----------------------------------------------------------------------------*/
