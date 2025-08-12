@@ -1,4 +1,4 @@
-`include "common.svh"
+`include "../common/common.svh"
 import common::*;
 module branch_unit(
     input clk,
