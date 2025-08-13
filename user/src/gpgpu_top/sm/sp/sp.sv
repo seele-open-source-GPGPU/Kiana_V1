@@ -83,9 +83,9 @@ module stream_processor(
     instruction_buffer_and_scoreboard u_instruction_buffer_and_scoreboard(
         .clk                   	(clk),
         .rst_n                 	(rst_n),
-        .warp_id_decoder        	(warp_id_out_from_decode_to_ib_sb),
-        .s_tvalid_decoder       	(m_tvalid_from_decode_to_ib_sb),
-        .s_tlast_decoder        	(m_tlast_from_decode_to_ib_sb),
+        .warp_id_decoder        (warp_id_out_from_decode_to_ib_sb),
+        .s_tvalid_decoder       (m_tvalid_from_decode_to_ib_sb),
+        .s_tlast_decoder        (m_tlast_from_decode_to_ib_sb),
         .rd                    	(rd_from_decode_to_ib_sb),
         .rs1                   	(rs1_from_decode_to_ib_sb),
         .rs2                   	(rs2_from_decode_to_ib_sb),

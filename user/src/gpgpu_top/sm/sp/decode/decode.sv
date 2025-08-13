@@ -1,4 +1,4 @@
-`include "common.svh"
+`include "../common/common.svh"
 import common::*;
 module decode(
     input clk,
@@ -19,7 +19,7 @@ module decode(
     output logic [7:0] feature_flags, // [0]:alu [1]:lsu [2]:write_pc [3]:depends on pc [4]:write_pred [5]:depends on pred
     output logic [31:0] err
 );
-    always @(posedge clk or negedge rst_n) begin
+    always_ff @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
             m_tvalid<=0;
             rd<=0;

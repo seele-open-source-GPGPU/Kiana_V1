@@ -24,7 +24,7 @@ module get_entry_status #(
   endgenerate
 
   // 查找第一个满足条件的 entry
-  assign valid_data_range[0] = '0;
+  assign valid_data_range[0] = 1'b0;
 
   genvar j;
   generate

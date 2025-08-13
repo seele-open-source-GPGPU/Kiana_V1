@@ -9,60 +9,60 @@ module instruction_cache (
   input  logic                            invalid_i         ,
   // wrap
   input  logic                            core_req_valid_i  ,
-  input  logic        [`XLEN-1:0]         core_req_addr_i   ,
-  input  logic        [`NUM_FETCH-1:0]    core_req_mask_i   ,
-  input  logic        [`DEPTH_WARP-1:0]   core_req_wid_i    ,
+  input  logic        [`KIANA_XLEN-1:0]         core_req_addr_i   ,
+  input  logic        [`KIANA_NUM_FETCH-1:0]    core_req_mask_i   ,
+  input  logic        [`KIANA_DEPTH_WARP-1:0]   core_req_wid_i    ,
 
   input  logic                            flush_pipe_valid_i,
-  input  logic        [`DEPTH_WARP-1:0]   flush_pipe_wid_i  ,
+  input  logic        [`KIANA_DEPTH_WARP-1:0]   flush_pipe_wid_i  ,
 
   // thread
   output logic                            core_rsp_valid_o  ,
-  output logic        [`XLEN-1:0]         core_rsp_addr_o   ,
-  output logic        [`NUM_FETCH*`XLEN-1:0] core_rsp_data_o,
-  output logic        [`NUM_FETCH-1:0]    core_rsp_mask_o   ,
-  output logic        [`DEPTH_WARP-1:0]   core_rsp_wid_o    ,
+  output logic        [`KIANA_XLEN-1:0]         core_rsp_addr_o   ,
+  output logic        [`KIANA_NUM_FETCH*`KIANA_XLEN-1:0] core_rsp_data_o,
+  output logic        [`KIANA_NUM_FETCH-1:0]    core_rsp_mask_o   ,
+  output logic        [`KIANA_DEPTH_WARP-1:0]   core_rsp_wid_o    ,
   output logic                            core_rsp_status_o , // 0 hit, 1 miss
 
   // next-level mem response (handle miss)
   output logic                            mem_rsp_ready_o   ,
   input  logic                            mem_rsp_valid_i   ,
-  input  logic        [`DEPTH_WARP-1:0]   mem_rsp_d_source_i,
-  input  logic        [`XLEN-1:0]         mem_rsp_d_addr_i  ,
-  input  logic        [`DCACHE_BLOCKWORDS*`XLEN-1:0] mem_rsp_d_data_i,
+  input  logic        [`KIANA_DEPTH_WARP-1:0]   mem_rsp_d_source_i,
+  input  logic        [`KIANA_XLEN-1:0]         mem_rsp_d_addr_i  ,
+  input  logic        [`KIANA_ICACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_rsp_d_data_i,
 
   // next-level mem request (send miss request)
   input  logic                            mem_req_ready_i   ,
   output logic                            mem_req_valid_o   ,
-  output logic        [`WIDBITS-1:0]      mem_req_a_source_o,
-  output logic        [`XLEN-1:0]         mem_req_a_addr_o
+  output logic        [`KIANA_WIDBITS-1:0]      mem_req_a_source_o,
+  output logic        [`KIANA_XLEN-1:0]         mem_req_a_addr_o
 );
 
-  localparam int BLOCK_BITS = `DCACHE_BLOCKWORDS*32;
-  localparam int BA_BITS    = `DCACHE_TAGBITS+`DCACHE_SETIDXBITS;
-  localparam int FIFO_BITS  = `DEPTH_WARP+`XLEN+(`DCACHE_BLOCKWORDS*`XLEN);
+  localparam BLOCK_BITS = `KIANA_ICACHE_BLOCKWORDS*32;
+  localparam BA_BITS    = `KIANA_ICACHE_TAGBITS+`KIANA_ICACHE_SETIDXBITS;
+  localparam FIFO_BITS  = `KIANA_DEPTH_WARP+`KIANA_XLEN+(`KIANA_ICACHE_BLOCKWORDS*`KIANA_XLEN);
 
   // data array access
   logic                                     dataAccess_r_req_valid;
-  logic [`DCACHE_NWAYS*BLOCK_BITS-1:0]      dataAccess_w_req_data;
-  logic [`DCACHE_NWAYS*BLOCK_BITS-1:0]      dataAccess_data;
+  logic [`KIANA_ICACHE_NWAYS*BLOCK_BITS-1:0]      dataAccess_w_req_data;
+  logic [`KIANA_ICACHE_NWAYS*BLOCK_BITS-1:0]      dataAccess_data;
 
   // tag array access
-  logic                                     tagAccess_r_req_valid;
-  logic [`DCACHE_SETIDXBITS-1:0]            tagAccess_r_req_setid;
-  logic [`DCACHE_TAGBITS-1:0]               tagAccess_tagFromCore_st1;
-  logic [`DCACHE_SETIDXBITS-1:0]            tagAccess_w_req_setid;
-  logic [`DCACHE_TAGBITS*`DCACHE_NWAYS-1:0] tagAccess_w_req_data;
-  logic [`DCACHE_TAGBITS-1:0]               tagAccess_w_req_data_scalar;
-  logic [`DCACHE_WAYIDXBITS-1:0]            wayid_hit_st1; // bin
-  logic                                     tagAccess_hit_st1;
-  logic [`DCACHE_WAYIDXBITS-1:0]            wayid_replace_st0; // bin
-  logic [`DCACHE_NSETS*`DCACHE_WAYIDXBITS-1:0] tagAccess_wayid_replacement;
-  logic [`DCACHE_NWAYS-1:0]                 wayid_replace_st0_one;
+  logic                                           tagAccess_r_req_valid;
+  logic [`KIANA_ICACHE_SETIDXBITS-1:0]            tagAccess_r_req_setid;
+  logic [`KIANA_ICACHE_TAGBITS-1:0]               tagAccess_tagFromCore_st1;
+  logic [`KIANA_ICACHE_SETIDXBITS-1:0]            tagAccess_w_req_setid;
+  logic [`KIANA_ICACHE_TAGBITS*`KIANA_ICACHE_NWAYS-1:0] tagAccess_w_req_data;
+  logic [`KIANA_ICACHE_TAGBITS-1:0]               tagAccess_w_req_data_scalar;
+  logic [`KIANA_ICACHE_WAYIDXBITS-1:0]            wayid_hit_st1; // bin
+  logic                                           tagAccess_hit_st1;
+  logic [`KIANA_ICACHE_WAYIDXBITS-1:0]            wayid_replace_st0; // bin
+  logic [`KIANA_ICACHE_NSETS*`KIANA_ICACHE_WAYIDXBITS-1:0] tagAccess_wayid_replacement;
+  logic [`KIANA_ICACHE_NWAYS-1:0]                 wayid_replace_st0_one;
 
   // mshr
   logic [BA_BITS-1:0]                       mshrAccess_miss_req_block_addr;
-  logic [`DEPTH_WARP-1:0]                   mshrAccess_miss_req_target_info;
+  logic [`KIANA_DEPTH_WARP-1:0]                   mshrAccess_miss_req_target_info;
   logic                                     mshrAccess_miss_rsp_in_ready;
   logic [BA_BITS-1:0]                       mshrAccess_miss_rsp_in_block_addr;
   logic [BA_BITS-1:0]                       mshrAccess_miss_rsp_out_block_addr;
@@ -73,9 +73,9 @@ module instruction_cache (
   logic                                     memRsp_valid;
   logic [FIFO_BITS-1:0]                     memRsp_data_i;
   logic [FIFO_BITS-1:0]                     memRsp_data_o;
-  logic [`DEPTH_WARP-1:0]                   mem_rsp_d_source_o;
-  logic [`XLEN-1:0]                         mem_rsp_d_addr_o;
-  logic [`DCACHE_BLOCKWORDS*`XLEN-1:0]      mem_rsp_d_data_o;
+  logic [`KIANA_DEPTH_WARP-1:0]                   mem_rsp_d_source_o;
+  logic [`KIANA_XLEN-1:0]                         mem_rsp_d_addr_o;
+  logic [`KIANA_ICACHE_BLOCKWORDS*`KIANA_XLEN-1:0]      mem_rsp_d_data_o;
 
   // pipeline regs / wires
   logic [BLOCK_BITS-1:0]                    data_after_wayid_st1;
@@ -84,9 +84,9 @@ module instruction_cache (
   logic                                     order_violation_st1;
   logic                                     status_st1, status_st2;
 
-  logic [`DEPTH_WARP-1:0]                   wid_st1, wid_st2, wid_st3;
-  logic [`XLEN-1:0]                         addr_st1, addr_st2;
-  logic [`NUM_FETCH-1:0]                    mask_st1, mask_st2;
+  logic [`KIANA_DEPTH_WARP-1:0]                   wid_st1, wid_st2, wid_st3;
+  logic [`KIANA_XLEN-1:0]                         addr_st1, addr_st2;
+  logic [`KIANA_NUM_FETCH-1:0]                    mask_st1, mask_st2;
   logic                                     core_req_fire_st1, core_req_fire_st2;
   logic [BLOCK_BITS-1:0]                    data_after_wayid_st2;
   logic                                     shouldFlushCoreRsp_st0_r, shouldFlushCoreRsp_st1_r;
@@ -95,7 +95,7 @@ module instruction_cache (
   logic                                     cacheMiss_st2, cacheMiss_st3;
 
   assign wayid_replace_st0 = tagAccess_wayid_replacement[
-                              (`DCACHE_WAYIDXBITS*(tagAccess_w_req_setid+1)-1)-:`DCACHE_WAYIDXBITS];
+                              (`KIANA_ICACHE_WAYIDXBITS*(tagAccess_w_req_setid+1)-1)-:`KIANA_ICACHE_WAYIDXBITS];
 
 
   always_ff @(posedge clk or negedge rst_n) begin
@@ -145,19 +145,19 @@ module instruction_cache (
   assign shouldFlushCoreRsp_st1 = (wid_st1 == flush_pipe_wid_i) && flush_pipe_valid_i;
 
   assign tagAccess_r_req_valid = core_req_valid_i && (!shouldFlushCoreRsp_st0);
-  assign tagAccess_tagFromCore_st1 = addr_st1 >> (`XLEN-`DCACHE_TAGBITS);
-  assign tagAccess_w_req_data_scalar = mshrAccess_miss_rsp_out_block_addr >> (BA_BITS-`DCACHE_TAGBITS);
-  assign tagAccess_w_req_data = {`DCACHE_NWAYS{tagAccess_w_req_data_scalar}};
+  assign tagAccess_tagFromCore_st1 = addr_st1 >> (`KIANA_XLEN-`KIANA_ICACHE_TAGBITS);
+  assign tagAccess_w_req_data_scalar = mshrAccess_miss_rsp_out_block_addr >> (BA_BITS-`KIANA_ICACHE_TAGBITS);
+  assign tagAccess_w_req_data = {`KIANA_ICACHE_NWAYS{tagAccess_w_req_data_scalar}};
 
-  assign mshrAccess_miss_req_block_addr = addr_st1 >> (`XLEN-(`DCACHE_TAGBITS+`DCACHE_SETIDXBITS));
-  assign mshrAccess_miss_req_target_info = {wid_st1,addr_st1[`DCACHE_BLOCKOFFSETBITS+`DCACHE_WORDOFFSETBITS-1:0]};
-  assign mshrAccess_miss_rsp_in_block_addr = mem_rsp_d_addr_o >> (`XLEN-(`DCACHE_TAGBITS+`DCACHE_SETIDXBITS));
+  assign mshrAccess_miss_req_block_addr = addr_st1 >> (`KIANA_XLEN-(`KIANA_ICACHE_TAGBITS+`KIANA_ICACHE_SETIDXBITS));
+  assign mshrAccess_miss_req_target_info = {wid_st1,addr_st1[`KIANA_ICACHE_BLOCKOFFSETBITS+`KIANA_ICACHE_WORDOFFSETBITS-1:0]};
+  assign mshrAccess_miss_rsp_in_block_addr = mem_rsp_d_addr_o >> (`KIANA_XLEN-(`KIANA_ICACHE_TAGBITS+`KIANA_ICACHE_SETIDXBITS));
 
   assign mem_req_a_addr_o = {mshrAccess_miss2mem_block_addr,{(32-BA_BITS){1'h0}}};
 
   assign dataAccess_r_req_valid = core_req_valid_i && !shouldFlushCoreRsp_st0;
 
-  assign dataAccess_w_req_data = {`DCACHE_NWAYS{mem_rsp_d_data_o}};
+  assign dataAccess_w_req_data = {`KIANA_ICACHE_NWAYS{mem_rsp_d_data_o}};
 
   assign data_after_wayid_st1 = dataAccess_data[(wayid_hit_st1+1)*BLOCK_BITS-1 -: BLOCK_BITS];
   
@@ -181,11 +181,11 @@ module instruction_cache (
 
 //handle the req ID from the core
   get_setid #(
-    .DATA_WIDTH      (`XLEN                  ),
-    .XLEN            (`XLEN                  ),
-    .SETIDXBITS      (`DCACHE_SETIDXBITS     ),
-    .BLOCK_OFFSETBITS(`DCACHE_BLOCKOFFSETBITS),
-    .WORD_OFFSETBITS (`DCACHE_WORDOFFSETBITS ),
+    .DATA_WIDTH      (`KIANA_XLEN                  ),
+    .XLEN            (`KIANA_XLEN                  ),
+    .SETIDXBITS      (`KIANA_ICACHE_SETIDXBITS     ),
+    .BLOCK_OFFSETBITS(`KIANA_ICACHE_BLOCKOFFSETBITS),
+    .WORD_OFFSETBITS (`KIANA_ICACHE_WORDOFFSETBITS ),
     .BA_BITS         (BA_BITS                )
     ) get_setid_tagAccess_r_req(
     .data_i(core_req_addr_i      ), 
@@ -194,10 +194,10 @@ module instruction_cache (
 //handle the memory refill ID
   get_setid #(
     .DATA_WIDTH      (BA_BITS                ),
-    .XLEN            (`XLEN                  ),
-    .SETIDXBITS      (`DCACHE_SETIDXBITS     ),
-    .BLOCK_OFFSETBITS(`DCACHE_BLOCKOFFSETBITS),
-    .WORD_OFFSETBITS (`DCACHE_WORDOFFSETBITS ),
+    .XLEN            (`KIANA_XLEN                  ),
+    .SETIDXBITS      (`KIANA_ICACHE_SETIDXBITS     ),
+    .BLOCK_OFFSETBITS(`KIANA_ICACHE_BLOCKOFFSETBITS),
+    .WORD_OFFSETBITS (`KIANA_ICACHE_WORDOFFSETBITS ),
     .BA_BITS         (BA_BITS                )
     ) get_setid_tagAccess_w_req(
     .data_i(mshrAccess_miss_rsp_out_block_addr), 
@@ -205,11 +205,11 @@ module instruction_cache (
     );
  //store tag, judge whether hit, decide replace way
   tag_access_icache #(
-    .TAG_WIDTH(`DCACHE_TAGBITS   ),
-    .NUM_SET  (`DCACHE_NSETS     ),
-    .NUM_WAY  (`DCACHE_NWAYS     ), 
-    .SET_DEPTH(`DCACHE_SETIDXBITS), 
-    .WAY_DEPTH(`DCACHE_WAYIDXBITS) 
+    .TAG_WIDTH(`KIANA_ICACHE_TAGBITS   ),
+    .NUM_SET  (`KIANA_ICACHE_NSETS     ),
+    .NUM_WAY  (`KIANA_ICACHE_NWAYS     ), 
+    .SET_DEPTH(`KIANA_ICACHE_SETIDXBITS), 
+    .WAY_DEPTH(`KIANA_ICACHE_WAYIDXBITS) 
     ) tagAccess(
     .clk                (clk                        ),
     .rst_n              (rst_n                      ),
@@ -226,8 +226,8 @@ module instruction_cache (
     ); 
 //binary to one-hot
   bin2one #(
-    .ONE_WIDTH(`DCACHE_NWAYS     ),
-    .BIN_WIDTH(`DCACHE_WAYIDXBITS)
+    .ONE_WIDTH(`KIANA_ICACHE_NWAYS     ),
+    .BIN_WIDTH(`KIANA_ICACHE_WAYIDXBITS)
     ) b2o(
     .bin(wayid_replace_st0    ),
     .oh (wayid_replace_st0_one)
@@ -235,10 +235,10 @@ module instruction_cache (
 //Read and write cache block data by group
   sram_template #(
     .GEN_WIDTH(BLOCK_BITS        ), 
-    .NUM_SET  (`DCACHE_NSETS     ), 
-    .NUM_WAY  (`DCACHE_NWAYS     ), 
-    .SET_DEPTH(`DCACHE_SETIDXBITS),
-    .WAY_DEPTH(`DCACHE_WAYIDXBITS)
+    .NUM_SET  (`KIANA_ICACHE_NSETS     ), 
+    .NUM_WAY  (`KIANA_ICACHE_NWAYS     ), 
+    .SET_DEPTH(`KIANA_ICACHE_SETIDXBITS),
+    .WAY_DEPTH(`KIANA_ICACHE_WAYIDXBITS)
     ) dataAccess(
     .clk            (clk                   ),
     .rst_n          (rst_n                 ),
@@ -253,13 +253,13 @@ module instruction_cache (
 
 //merge miss, handle memory refill
   mshr_icache #(
-    .TI_WIDTH       (`WIDBITS              ), 
+    .TI_WIDTH       (`KIANA_WIDBITS              ), 
     .BA_BITS        (BA_BITS               ),
-    .WID_BITS       (`DEPTH_WARP           ), 
-    .NUM_ENTRY      (`DCACHE_MSHRENTRY     ), 
-    .NUM_SUB_ENTRY  (`DCACHE_MSHRSUBENTRY  ), 
-    .ENTRY_DEPTH    (`DCACHE_ENTRY_DEPTH   ), 
-    .SUB_ENTRY_DEPTH(`DCACHE_SUBENTRY_DEPTH) 
+    .WID_BITS       (`KIANA_DEPTH_WARP           ), 
+    .NUM_ENTRY      (`KIANA_ICACHE_MSHRENTRY     ), 
+    .NUM_SUB_ENTRY  (`KIANA_ICACHE_MSHRSUBENTRY  ), 
+    .ENTRY_DEPTH    (`KIANA_ICACHE_ENTRY_DEPTH   ), 
+    .SUB_ENTRY_DEPTH(`KIANA_ICACHE_SUBENTRY_DEPTH) 
     ) mshrAccess(
     .clk                      (clk                               ),
     .rst_n                    (rst_n                             ),
