@@ -35,6 +35,8 @@ module fetch(
     logic [31:0] rotated_req;
     logic [31:0] rotated_grant;
     logic [31:0] unrotated_grant;
+
+    logic [31:0] _err;
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
             s_tready<=0;
@@ -54,7 +56,7 @@ module fetch(
             m_tlast_update_queue<=0;
         end 
         else begin
-            err<=0;
+            _err=0;
             if(initialize) begin
                 warp_id_reg<=warp_id;
                 pc_reg<=next_pc;
@@ -69,7 +71,7 @@ module fetch(
                 if(s_tready && s_tvalid) begin
                     warp_mask_reg<=warp_mask;
                     busy<=1;
-                    if(~(|warp_mask)) err<=err | `KIANA_SP_ERR_FETCHER_INVALID_WARP_MASK;
+                    if(~(|warp_mask)) _err=_err | `KIANA_SP_ERR_FETCHER_INVALID_WARP_MASK;
                     s_tready<=0;
                 end
                 if(busy) begin
@@ -112,6 +114,7 @@ module fetch(
                 s_tready<=0;
                 m_tvalid<=0;
             end
+            err<=_err;
         end
     end
 endmodule

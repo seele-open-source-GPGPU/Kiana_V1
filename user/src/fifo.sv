@@ -19,7 +19,6 @@ module dual_sram#(parameter DATA_WIDTH=4,parameter ADDR_WIDTH=4)(
     always_ff @(posedge rclk or posedge rst) begin
         if(rst) r_data<=0;
         else if(r_en) r_data<=mem[r_addr];
-        else r_data<='z;
     end
 endmodule
 

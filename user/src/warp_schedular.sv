@@ -20,6 +20,7 @@ module warp_schedular(
     input m_tready_request_fifo,
     output logic m_tvalid_request_fifo,
     output logic [102:0] dispatch_request,
+
     input m_tready_alu,
     input m_tready_lsu,
     input m_tready_special
@@ -30,6 +31,8 @@ module warp_schedular(
     logic m_tvalid_alu;
     logic m_tvalid_lsu;
     logic m_tvalid_special;
+    // dispatched_instruction = {rd,rs1,rs2,opcode,imm,feature_flags}; 62:58   57:53   52:48   47:40   39:8   7:0
+    // 102:98 97:35 34:3 2 1 0
     assign dispatch_request={dispatch_warp_id,dispatched_instruction,warp_pred,m_tvalid_alu,m_tvalid_lsu,m_tvalid_special};
     // 根据运行单元的状态构建发射掩码
     logic [31:0] dispatch_mask_alu;
@@ -45,6 +48,8 @@ module warp_schedular(
     logic [4:0] last_idx;
     logic [31:0] arbiter_mask;
     logic [4:0] selected_warp_id;
+
+    logic [31:0] _err;
     always_comb begin
         for(int i=0;i<32;i++) begin
             dispatch_mask_alu[i]=~(instruction_buffer[i][0] && (~m_tready_alu));
@@ -76,7 +81,7 @@ module warp_schedular(
             m_tvalid_request_fifo<=0;
         end
         else begin
-            err<=0;
+            _err=0;
             if(|arbiter_mask && s_tready_schedular && m_tready_request_fifo) begin
                 logic [4:0] rd;
                 s_tready_schedular<=0;
@@ -96,18 +101,18 @@ module warp_schedular(
                 case({instruction_buffer[selected_warp_id][0],instruction_buffer[selected_warp_id][1]})
                     2'b00:begin
                         if(m_tready_special) m_tvalid_special<=1;
-                        else err<=err | `KIANA_SP_ERR_DISPATCHER_INSTRUCTION_SELECTED_WITH_EXE_UNIT_NOT_READY;
+                        else _err=_err | `KIANA_SP_ERR_DISPATCHER_INSTRUCTION_SELECTED_WITH_EXE_UNIT_NOT_READY;
                     end
                     2'b01:begin
                         if(m_tready_alu) m_tvalid_alu<=1;
-                        else err<=err | `KIANA_SP_ERR_DISPATCHER_INSTRUCTION_SELECTED_WITH_EXE_UNIT_NOT_READY;
+                        else _err=_err | `KIANA_SP_ERR_DISPATCHER_INSTRUCTION_SELECTED_WITH_EXE_UNIT_NOT_READY;
                     end
                     2'b10:begin
                         if(m_tready_lsu) m_tvalid_lsu<=1;
-                        else err<=err | `KIANA_SP_ERR_DISPATCHER_INSTRUCTION_SELECTED_WITH_EXE_UNIT_NOT_READY;
+                        else _err=_err | `KIANA_SP_ERR_DISPATCHER_INSTRUCTION_SELECTED_WITH_EXE_UNIT_NOT_READY;
                     end
                     default:begin
-                        err<=err | `KIANA_SP_ERR_DISPATCHER_BOTH_LSU_ALU_USED;
+                        _err=_err | `KIANA_SP_ERR_DISPATCHER_BOTH_LSU_ALU_USED;
                     end
                 endcase
                 // 发射结果写回记分牌
@@ -132,6 +137,7 @@ module warp_schedular(
             else s_tready_schedular<=1;
             if(m_tvalid_ib_sb) m_tvalid_ib_sb<=0;
             if(m_tvalid_request_fifo) m_tvalid_request_fifo<=0;
+            err<=_err;
         end
     end
 endmodule

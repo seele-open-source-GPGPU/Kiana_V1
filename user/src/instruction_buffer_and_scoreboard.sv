@@ -59,6 +59,8 @@ module instruction_buffer_and_scoreboard(
     logic [31:0] instruction_buffer_valid;
     logic [31:0] instruction_buffer_ready;
 
+    logic [31:0] _err;
+
     // 62:58   57:53   52:48   47:40   39:8   7:0
     assign instruction_info_packed_input={rd,rs1,rs2,opcode,imm,feature_flags};
     assign warp_ready_mask=instruction_buffer_ready;
@@ -130,11 +132,12 @@ module instruction_buffer_and_scoreboard(
             m_tvalid_schedular<=0;
         end
         else begin
+            _err=0;
             // 首先是指令缓存接口 取值模块
             // 接收
             if(s_tvalid_decoder && waiting_for_feed_back) begin
                 // 开始传输
-                if(instruction_buffer_valid[warp_id_decoder]) err<=err | `KIANA_SP_ERR_INSTRUCTION_BUFFER_SLOT_WRONG_OVERRIDE;
+                if(instruction_buffer_valid[warp_id_decoder]) _err<=_err | `KIANA_SP_ERR_INSTRUCTION_BUFFER_SLOT_WRONG_OVERRIDE;
                 instruction_buffer_valid[warp_id_decoder]<=1;
                 if(s_tlast_decoder) begin
                     waiting_for_feed_back<=0;
@@ -174,6 +177,7 @@ module instruction_buffer_and_scoreboard(
                     instruction_buffer_valid[finish_wr_warp_id_bar]<=0;
                 end
             end
+            err<=_err;
         end
     end
 endmodule

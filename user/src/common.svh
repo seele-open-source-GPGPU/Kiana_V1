@@ -46,5 +46,49 @@ package common;
     `define KIANA_SP_ERR_BRANCH_UNIT_INVALID_OP                                     32'b0000_0000_0000_0000_0000_0000_1000_0000
 
     `define KIANA_SP_ERR_BRANCH_UNIT_BRANCH_ERR                                     32'b0000_0000_0000_0000_0000_0001_0000_0000
+    `define KIANA_SP_ERR_ISSUE_FIFO_OVERFLOW                                        32'b0000_0000_0000_0000_0000_0010_0000_0000
+    function is_special(input [102:0] in);
+        return in[0];
+    endfunction
+
+    function is_lsu(input [102:0] in);
+        return in[1];
+    endfunction
+
+    function is_alu(input [102:0] in);
+        return in[2];
+    endfunction
+
+    function [31:0] get_pred(input [102:0] in);
+        return in[34:3];
+    endfunction
+
+    function [7:0] get_feature_flags(input [102:0] in);
+        return in[42:35];
+    endfunction
+
+    function [31:0] get_imm(input [102:0] in);
+        return in[74:43];
+    endfunction
+
+    function [7:0] get_opcode(input [102:0] in);
+        return in[82:75];
+    endfunction
+
+    function [4:0] get_rs2(input [102:0] in);
+        return in[87:83];
+    endfunction
+
+    function [4:0] get_rs1(input [102:0] in);
+        return in[92:88];
+    endfunction
+
+    function [4:0] get_rd(input [102:0] in);
+        return in[97:93];
+    endfunction
+
+    function [4:0] get_warp_id(input [102:0] in);
+        return in[102:98];
+    endfunction
 endpackage
 `endif

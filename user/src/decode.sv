@@ -33,6 +33,7 @@ module decode(
             m_tlast<=0;
         end
         else begin
+            err<=0;
             m_tlast<=s_tlast;
             warp_id_out<=warp_id_in;
             if(s_tvalid) begin

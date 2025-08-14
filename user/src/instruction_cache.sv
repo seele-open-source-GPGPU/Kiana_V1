@@ -1,4 +1,4 @@
-module access_instruction_cache(
+module instruction_cache(
     input clk,
     input rst_n,
     input [4:0] selected_warp_id,
