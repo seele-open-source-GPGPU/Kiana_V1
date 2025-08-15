@@ -1,9 +1,9 @@
 // 接收指令，取出操作数并放入fifo
-module issue(
+module oprand_collector(
     input clk,
     input rst_n,
 
-    output logic m_tready_issue_fifo,
+    output logic m_tready_issue,
     input m_tvalid_request,
     input [102:0] dispatch_request,
 
@@ -19,10 +19,15 @@ module issue(
     input [31:0] oprand_2_data[32],
     output logic [4:0] oprand_2_addr,
     output logic oprand_2_request,
-
-    output logic issue_fifo_empty,
+    // 和执行单元的通信
+    output logic [2:0] dispatch_dest, // [2]: alu, [1]: lsu, [0]: special
     output logic [31:0] data_o_1[32],
     output logic [31:0] data_o_2[32],
+    output logic [102:0] dispatched_request_o,
+
+    input tready_alu,
+    input tready_lsu,
+    input tready_special,
 
     output logic err
 );
@@ -41,7 +46,7 @@ module issue(
     logic [31:0] oprand_1_temp_store[32];
     logic [31:0] oprand_2_temp_store[32];
     logic [102:0] dispatch_request_reg;
-    logic oprand_get;
+    logic [1:0] oprand_get;
     always@(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
             oprand_1_addr<=0;
@@ -64,7 +69,7 @@ module issue(
                     if(m_tvalid_request) begin
                         logic [4:0] rs1,rs2;
                         logic [62:0] dispatched_instruction;
-                        dispatch_request_reg<dispatch_request
+                        dispatch_request_reg<=dispatch_request;
                         dispatched_instruction=dispatch_request[97:35];
                         rs1=dispatched_instruction[57:53];
                         rs2=dispatched_instruction[52:48];
@@ -83,16 +88,16 @@ module issue(
                         end
                         else oprand_2_request<=0;
 
-                        m_tready_issue_fifo<=0;
+                        m_tready_issue<=0;
                         if(has_rs1_rs2_imm[2] | has_rs1_rs2_imm[1]) begin
-                            state<=PUSH_TO_FIFO;
+                            state<=OK_TO_DISPATCH;
                         end
                         else begin
                             state<=WAITING_FOR_OPRAND;
                         end
                     end
                     else begin
-                        m_tready_issue_fifo<=1;
+                        m_tready_issue<=1;
                         state<=IDLE;
                     end
                     oprand_get<=0;
@@ -111,10 +116,22 @@ module issue(
                     else state<=WAITING_FOR_OPRAND;
                 end
                 OK_TO_DISPATCH: begin
-                    else state<=IDLE;
+                    logic [2:0] exe_unit_states,dest;
+                    dest=get_dispatch_dest(dispatch_request_reg);
+                    exe_unit_states={tready_alu,tready_lsu,tready_special};
+                    if((dest & exe_unit_states)==dest) begin
+                        state<=IDLE;
+                        dispatch_dest<=dest;
+                        dispatched_request_o<=dispatch_request_reg;
+                        data_o_1<=oprand_1_temp_store;
+                        data_o_2<=oprand_2_temp_store;
+                    end
+                    else begin
+                        state<=OK_TO_DISPATCH;
+                        dispatch_dest<=0;
+                    end
                 end
             endcase
-            
         end
     end
     function automatic logic[2:0] get_has_rs1_rs2_imm(input [62:0] dispatched_instruction);
@@ -184,7 +201,16 @@ module issue(
         end
         return {has_rs1,has_rs2,has_imm};
     endfunction
-    // issue_fifo   
-    logic [2047:0]  
+    function automatic logic[2:0] get_dispatch_dest(input [102:0] dispatch_request);
+        logic [62:0] dispatched_instruction;
+        logic [7:0] opcode;
+        dispatched_instruction=dispatch_request[97:35];
+        opcode=dispatched_instruction[47:40];
+        if(opcode<6) return 3'b100;
+        else if(opcode<14) return 3'b010;
+        else if(opcode<33) return 3'b100;
+        else if(opcode<43) return 3'b001;
+        else return 3'b000;
+    endfunction
     
 endmodule 

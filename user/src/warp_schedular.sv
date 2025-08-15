@@ -59,6 +59,8 @@ module warp_schedular(
         arbiter_mask=dispatch_mask_alu & dispatch_mask_lsu & other_instruction_mask & warp_ready_mask;
     end
     // alu和lsu分作两个发射队列。互不影响。
+    // 发射一条指令后等一个周期再发射
+    logic waiting;
     always@(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
             last_idx<=0;
@@ -79,10 +81,11 @@ module warp_schedular(
             m_tvalid_special<=0;
 
             m_tvalid_request_fifo<=0;
+            waiting<=0;
         end
         else begin
             _err=0;
-            if(|arbiter_mask && s_tready_schedular && m_tready_request_fifo) begin
+            if(|arbiter_mask && s_tready_schedular && m_tready_request_fifo && ~waiting) begin
                 logic [4:0] rd;
                 s_tready_schedular<=0;
                 offset=last_idx+1;
@@ -133,8 +136,12 @@ module warp_schedular(
                 target_is_pred<=instruction_buffer[selected_warp_id][4];
                 m_tvalid_ib_sb<=1;
                 m_tvalid_request_fifo<=1;
+                waiting<=1;
             end
-            else s_tready_schedular<=1;
+            else begin 
+                s_tready_schedular<=1;
+                waiting<=0;
+            end
             if(m_tvalid_ib_sb) m_tvalid_ib_sb<=0;
             if(m_tvalid_request_fifo) m_tvalid_request_fifo<=0;
             err<=_err;
