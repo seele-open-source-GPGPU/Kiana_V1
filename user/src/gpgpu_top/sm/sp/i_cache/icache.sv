@@ -1,6 +1,16 @@
-`include "../common/common.svh"
+// +FHDR------------------------------------------------------------------------
+// XJTU IAIR Corporation All Rights Reserved
+// -----------------------------------------------------------------------------
+// FILE NAME  : sy_icache.v
+// DEPARTMENT : CAG of IAIR
+// AUTHOR     : shenghuanliu
+// AUTHOR'S EMAIL :liushenghuan2002@gmail.com
+// -----------------------------------------------------------------------------
+// Ver 1.0  2025--01--01 initial version.
+`include "../../../header/icache_header.svh"
+`include "../../../header/ACE4_header.svh"
 import icache::*;
-import AX14_channel::*;
+import ACE4_channel::*;
 
 module icache #(
     parameter                         HART_ID_WTH = 1,
@@ -9,20 +19,27 @@ module icache #(
     input logic clk_i,
     input logic rst_i,
 
-    input  logic                  flush_i,
-    output logic                  flush_done_o,
-    output logic                  cache_miss_o,
+    input  logic                                  flush_i,
+    output logic                                  flush_done_o,
+    output logic                                  cache_miss_o,
     // address translation requests
-    input  mmu_icache_rsp_t       mmu_icache__rsp_i,
-    output icache_mmu_req_t       icache_mmu__req_o,
+    input  mmu_icache_rsp_t                       mmu_icache__rsp_i,
+    output icache_mmu_req_t                       icache_mmu__req_o,
     // data requests
-    input  fetch_req_t            fetch_icache__req_i,
-    output fetch_rsp_t            icache_fetch__rsp_o,
+    input  fetch_req_t                            fetch_icache__req_i,
+    output fetch_rsp_t                            icache_fetch__rsp_o,
     // refill port
-    // AXI4 read
-    output AX14_channel::axi_ar_t icache_ar,
-    // AXI4 response
-    output AX14_channel::axi_r_t icache_r
+    // A channel
+    output logic                                  icache_ace_arvalid,
+    input  logic                                  icache_ace_arready,
+    output logic            [`ACE_SIZE_WIDTH-1:0] icache_ace_arsize,
+    output logic            [  `ACE_ID_WIDTH-1:0] icache_ace_rid,
+    output logic            [`ACE_ADDR_WIDTH-1:0] icache_ace_araddr,
+
+    // D channel
+    output logic                       icache_ace_rready,
+    input  logic                       icache_ace_rvalid,
+    input  logic [`ACE_DATA_WIDTH-1:0] icache_ace_rdata
 );
 
   //======================================================================================================================
@@ -55,27 +72,27 @@ module icache #(
   logic [`KIANA_ICACHE_TAG_LSB-`KIANA_ICACHE_DATA_WTH-1:0]                            cache_waddr;
   logic                                                                               cache_data_wr;
   logic                                                                               cache_tag_wr;
-  logic [`KIANA_ICACHE_SET_SIZE-1:0][`KIANA_ICACHE_TAG_WTH-1:0]                       tag_array                                  [`KIANA_ICACHE_WAY_NUM-1:0];
+  logic [                      `KIANA_ICACHE_SET_SIZE-1:0][`KIANA_ICACHE_TAG_WTH-1:0] tag_array                                  [`KIANA_ICACHE_WAY_NUM-1:0];
   logic [                      `KIANA_ICACHE_SET_SIZE-1:0]                            cl_valid                                   [`KIANA_ICACHE_WAY_NUM-1:0];  // cache_line_valid
   logic [                       `KIANA_ICACHE_TAG_WTH-1:0]                            phy_tag;
-  logic                                     cacheable_d, cacheable_q;
-  logic [63:0]                              vaddr_d, vaddr_q;
-  logic [63:0]                              paddr_d, paddr_q;
+  logic cacheable_d, cacheable_q;
+  logic [63:0] vaddr_d, vaddr_q;
+  logic [63:0] paddr_d, paddr_q;
   logic [        `KIANA_ICACHE_WAY_NUM-1:0] cl_hit;  // hit from tag compare
   logic [   `KIANA_ICACHE_FETCH_SIZE*8-1:0] cl_rdata                        [`KIANA_ICACHE_WAY_NUM-1:0];
   logic [$clog2(`KIANA_ICACHE_WAY_NUM)-1:0] hit_idx;
-  logic [`KIANA_ICACHE_DATA_MSB-1:0]        data_offset_d, data_offset_q;
-  logic [`KIANA_ICACHE_SET_SIZE-1:0]        plru0;
-  logic [`KIANA_ICACHE_SET_SIZE-1:0][1:0]   plru1;
-  logic [`KIANA_ICACHE_SET_SIZE-1:0][1:0]   plru_rpl_way;
-  logic [                       1:0]        rpl_way;
-  logic                                     comp_en;
-  logic                                     allow_comp;
-  logic [4:0]                               counter_d, counter_q;
-  logic                                     transaction_done;
-  logic                                     transaction_last;
-  logic [`KIANA_ICACHE_WAY_NUM-1:0]         cache_wen;
-  logic                                     cache_rd_en_dly1;
+  logic [`KIANA_ICACHE_DATA_MSB-1:0] data_offset_d, data_offset_q;
+  logic [`KIANA_ICACHE_SET_SIZE-1:0]      plru0;
+  logic [`KIANA_ICACHE_SET_SIZE-1:0][1:0] plru1;
+  logic [`KIANA_ICACHE_SET_SIZE-1:0][1:0] plru_rpl_way;
+  logic [                       1:0]      rpl_way;
+  logic                                   comp_en;
+  logic                                   allow_comp;
+  logic [4:0] counter_d, counter_q;
+  logic                             transaction_done;
+  logic                             transaction_last;
+  logic [`KIANA_ICACHE_WAY_NUM-1:0] cache_wen;
+  logic                             cache_rd_en_dly1;
   logic [`KIANA_ICACHE_TAG_LSB-`KIANA_ICACHE_DATA_WTH-1:0] waddr_d, waddr_q;
   logic [$clog2(`KIANA_ICACHE_WAY_NUM)-1:0] inv_way;
   logic                                     all_ways_valid;
@@ -101,6 +118,9 @@ module icache #(
   assign cache_raddr                   = vaddr_d[`KIANA_ICACHE_TAG_LSB-1:`KIANA_ICACHE_DATA_MSB];
   assign cache_set_inx                 = vaddr_d[`KIANA_ICACHE_SET_MSB-1:`KIANA_ICACHE_SET_LSB];
 
+  // assign data_offset_d = (icache_fetch__rsp_o.ready & fetch_icache__req_i.req) ? (vaddr_d[`KIANA_ICACHE_DATA_MSB-1]<<2) :
+  //                        (~cacheable_q & icache_A_valid_o) ? vaddr_d[`KIANA_ICACHE_DATA_MSB-1]<<2 : data_offset_q;
+
   assign data_offset_d                 = (icache_fetch__rsp_o.ready && fetch_icache__req_i.req) ? (vaddr_d[`KIANA_ICACHE_DATA_MSB-1] << 2) : data_offset_q;
 
 
@@ -120,21 +140,24 @@ module icache #(
   // read data from cache or from next level memory
   assign icache_fetch__rsp_o.vaddr = vaddr_q;
   assign icache_fetch__rsp_o.ex    = mmu_icache__rsp_i.fetch_exception;  // ex from mmu
-  assign icache_fetch__rsp_o.data  = (cacheable_d) ? cl_rdata[hit_idx] : icache_r.rdata[{data_offset_q, 3'b0}+:`KIANA_ICACHE_FETCH_SIZE*8];
+  assign icache_fetch__rsp_o.data  = (cacheable_d) ? cl_rdata[hit_idx] : icache_ace_rdata[{data_offset_q, 3'b0}+:`KIANA_ICACHE_FETCH_SIZE*8];
 
   // if access non-cacheable area,just read 8B
-  assign icache_ar.arsize      = cacheable_d ? (`KIANA_ICACHE_BLOCK_SIZE / `KIANA_ICACHE_DATA_SIZE - 1) : '0;
-  assign icache_ar.arid    = SOURCE_ID;
+  assign icache_ace_arsize      = cacheable_d ? (`KIANA_ICACHE_BLOCK_SIZE / `KIANA_ICACHE_DATA_SIZE - 1) : '0;
+  assign icache_ace_rid    = SOURCE_ID;
   // address must be aligned to size 
-  assign icache_ar.araddr   = cacheable_d ? ((paddr_d >> `KIANA_ICACHE_BLOCK_WTH) << `KIANA_ICACHE_BLOCK_WTH) : ((paddr_d >> `KIANA_ICACHE_DATA_WTH) << `KIANA_ICACHE_DATA_WTH);
+  assign icache_ace_araddr   = cacheable_d ? ((paddr_d >> `KIANA_ICACHE_BLOCK_WTH) << `KIANA_ICACHE_BLOCK_WTH) : ((paddr_d >> `KIANA_ICACHE_DATA_WTH) << `KIANA_ICACHE_DATA_WTH);
+  // assign icache_r_bits_o_mask = '0;
+  // assign icache_r_bits_o_data = '0;
+  // assign icache_r_bits_o_corrupt = 1'b0;
 
   always_comb begin : transaction_cnt
     waddr_d   = waddr_q;
     counter_d = counter_q;
-    if (icache_ar.arvalid && icache_ar.arready) begin
+    if (icache_ace_arvalid && icache_ace_arready) begin
       counter_d = cacheable_d ? (`KIANA_ICACHE_BLOCK_SIZE / `KIANA_ICACHE_DATA_SIZE) : 1'b1;
       waddr_d   = vaddr_q[`KIANA_ICACHE_TAG_LSB-1:`KIANA_ICACHE_BLOCK_WTH] << 4;
-    end else if (counter_q != '0 && (icache_r.rvalid && icache_r.rready)) begin
+    end else if (counter_q != '0 && (icache_ace_rvalid && icache_ace_rready)) begin
       counter_d = counter_q - 1'b1;
       waddr_d   = waddr_q + 1;
     end
@@ -156,8 +179,8 @@ module icache #(
     icache_fetch__rsp_o.ready   = 1'b0;
     icache_fetch__rsp_o.valid   = 1'b0;
 
-    icache_ar.arvalid            = 1'b0;
-    icache_r.rready            = 1'b0;
+    icache_ace_arvalid            = 1'b0;
+    icache_ace_rready          = 1'b0;
 
     icache_mmu__req_o.fetch_req = 1'b0;
     // performance counter
@@ -211,8 +234,8 @@ module icache #(
             end
           end else begin
             // use TileLink A to send read request
-            icache_ar.arvalid = 1'b1;
-            if (icache_ar.arready) begin
+            icache_ace_arvalid = 1'b1;
+            if (icache_ace_arready) begin
               cache_miss_o = ~cacheable_q;
               state_d      = REFILL;
             end
@@ -247,8 +270,8 @@ module icache #(
         if (fetch_icache__req_i.kill || flush_i) begin
           state_d = KILL_REFILL;
         end else begin
-          icache_r.rready = 1'b1;
-          if (icache_r.rvalid && icache_r.rready) begin
+          icache_ace_rready = 1'b1;
+          if (icache_ace_rvalid && icache_ace_rready) begin
             cache_data_wr = cacheable_q;
             if (transaction_last) begin
               if (~cacheable_q) begin
@@ -276,8 +299,8 @@ module icache #(
       end
       // killed miss, wait until memory responds and go back to idle
       KILL_REFILL: begin
-        icache_r.rready = 1'b1;
-        if (icache_r.rvalid && icache_r.rready) begin
+        icache_ace_rready = 1'b1;
+        if (icache_ace_rvalid && icache_ace_rready) begin
           if (transaction_last) begin
             if (~cacheable_q) begin
               state_d = IDLE;
@@ -334,7 +357,7 @@ module icache #(
     end
   end
   // find invalid cache line
-  zero_counter #(
+  lzc #(
       .WIDTH(`KIANA_ICACHE_WAY_NUM)
   ) i_lzc_inv (
       .in_i   (~way_valid),
@@ -346,7 +369,7 @@ module icache #(
   ///////////////////////////////////////////////////////
   // memory arrays and regs
   ///////////////////////////////////////////////////////
-  assign cache_wdata = icache_r.rdata;
+  assign cache_wdata = icache_ace_rdata;
   assign cache_waddr = waddr_q;
   for (genvar i = 0; i < `KIANA_ICACHE_WAY_NUM; i++) begin : tag_and_data
     assign cache_wen[i] = cache_data_wr && (i == rpl_way);
