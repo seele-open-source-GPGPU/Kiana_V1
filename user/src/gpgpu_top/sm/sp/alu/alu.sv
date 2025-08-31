@@ -1,4 +1,4 @@
-`include "common.svh"
+`include "./common/common.svh"
 import common::*;
 module alu (
     input [31:0] operand_a,

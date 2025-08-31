@@ -1,5 +1,5 @@
 `timescale 1ns/1ns
-`include "../common/common.svh"
+`include "../l1_cache.svh"
 import i_cache::*;
 
 module instruction_cache (
