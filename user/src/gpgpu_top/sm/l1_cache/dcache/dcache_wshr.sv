@@ -1,16 +1,4 @@
-/*
- * Copyright (c) 2023-2024 C*Core Technology Co.,Ltd,Suzhou.
- * Ventus-RTL is licensed under Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
- * You may obtain a copy of Mulan PSL v2 at:
- *          http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
- * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
- * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
- * See the Mulan PSL v2 for more details. */
-// Author: Chen, Qixiang
-// Description:
-`include "define.v"
+`include "../l1_cache.svh"
 
 `timescale 1ns/1ps
 
@@ -18,30 +6,30 @@ module dcache_wshr #(
   parameter DEPTH = `DCACHE_WSHR_ENTRY          ,
   parameter WIDTH = $clog2(`DCACHE_WSHR_ENTRY)    
 )(
-  input                                             clk                     ,
-  input                                             rst_n                   ,
+  input  logic                                           clk                     ,
+  input  logic                                           rst_n                   ,
 
   // push
-  input                                             pushReq_valid_i         ,
-  output                                            pushReq_ready_o         ,
-  input   [`DCACHE_SETIDXBITS+`DCACHE_TAGBITS-1:0]  pushReq_blockAddr_i     ,
-  output                                            conflict_o              ,
-  output  [WIDTH-1:0]                               pushedIdx_o             ,
+  input  logic                                           pushReq_valid_i         ,
+  output logic                                           pushReq_ready_o         ,
+  input  logic [`DCACHE_SETIDXBITS+`DCACHE_TAGBITS-1:0]  pushReq_blockAddr_i     ,
+  output logic                                           conflict_o              ,
+  output logic [WIDTH-1:0]                               pushedIdx_o             ,
 
   // for invOrFlu
-  output                                            empty_o                 ,
+  output logic                                           empty_o                 ,
   
   // pop
-  input                                             popReq_valid_i          ,
-  input   [WIDTH-1:0]                               popReq_bits_i             
+  input  logic                                           popReq_valid_i          ,
+  input  logic [WIDTH-1:0]                               popReq_bits_i             
 );
 
-  reg   [(`DCACHE_SETIDXBITS+`DCACHE_TAGBITS)*DEPTH-1:0]    blockAddrEntries        ;
-  reg   [DEPTH-1:0]                                         validEntries            ;
-  wire  [DEPTH-1:0]                                         pushMatchMask           ;
-  wire  [WIDTH-1:0]                                         nextEntryIdx            ;
-  wire                                                      pop_push_in_same_cycle  ;
-  wire  [DEPTH-1:0]                                         available_entries_oh    ;
+  logic  [(`DCACHE_SETIDXBITS+`DCACHE_TAGBITS)*DEPTH-1:0]    blockAddrEntries        ;
+  logic  [DEPTH-1:0]                                         validEntries            ;
+  logic  [DEPTH-1:0]                                         pushMatchMask           ;
+  logic  [WIDTH-1:0]                                         nextEntryIdx            ;
+  logic                                                      pop_push_in_same_cycle  ;
+  logic  [DEPTH-1:0]                                         available_entries_oh    ;
   //wire  [WIDTH-1:0]                                         available_entries_bin   ;
 
 

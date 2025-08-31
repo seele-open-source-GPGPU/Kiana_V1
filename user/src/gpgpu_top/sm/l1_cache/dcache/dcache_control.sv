@@ -1,28 +1,16 @@
-/*
- * Copyright (c) 2023-2024 C*Core Technology Co.,Ltd,Suzhou.
- * Ventus-RTL is licensed under Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
- * You may obtain a copy of Mulan PSL v2 at:
- *          http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
- * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
- * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
- * See the Mulan PSL v2 for more details. */
-// Author: Tan, Zhiyuan
-// Description: classify lsu req
 `timescale 1ns/1ns
 
 module dcache_control (
-  input  [2:0] opcode       ,
-  input  [3:0] param        ,
-  output       is_read      ,
-  output       is_write     ,
-  output       is_lr        ,
-  output       is_sc        ,
-  output       is_amo       ,
-  output       is_flush     ,
-  output       is_invalidate,
-  output       is_wait_mshr 
+  input  logic [2:0] opcode       ,
+  input  logic [3:0] param        ,
+  output logic       is_read      ,
+  output logic       is_write     ,
+  output logic       is_lr        ,
+  output logic       is_sc        ,
+  output logic       is_amo       ,
+  output logic       is_flush     ,
+  output logic       is_invalidate,
+  output logic       is_wait_mshr 
 );
 
   assign is_read       = ((opcode==3'b000) && (param==4'b0000)) ? 'd1 : 'd0;

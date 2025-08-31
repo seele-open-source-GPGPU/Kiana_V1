@@ -1,37 +1,22 @@
-/*
- * Copyright (c) 2023-2024 C*Core Technology Co.,Ltd,Suzhou.
- * Ventus-RTL is licensed under Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
- * You may obtain a copy of Mulan PSL v2 at:
- *          http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
- * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
- * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
- * See the Mulan PSL v2 for more details. */
-// Author: Chen, Qixiang
-// Description:
 `include "define.v"
-
 `timescale 1ns/1ps
-
 module gen_data_map_same_word(
-  input       [1*`DCACHE_NLANES-1:0]                          perLaneAddr_activeMask_i              ,
-  input       [`DCACHE_BLOCKOFFSETBITS*`DCACHE_NLANES-1:0]    perLaneAddr_blockOffset_i             ,
-  input       [`BYTESOFWORD*`DCACHE_NLANES-1:0]               perLaneAddr_wordOffset1H_i            ,
-  input       [`WORDLENGTH*`DCACHE_NLANES-1:0]                data_i                                ,
-  output      [1*`DCACHE_NLANES-1:0]                          perLaneAddrRemap_activeMask_o         , // no use
-  output      [`DCACHE_BLOCKOFFSETBITS*`DCACHE_NLANES-1:0]    perLaneAddrRemap_blockOffset_o        , // no use
-  output      [`BYTESOFWORD*`DCACHE_NLANES-1:0]               perLaneAddrRemap_wordOffset1H_o       ,
-  output      [`WORDLENGTH*`DCACHE_NLANES-1:0]                data_o                                 
+  input  logic  [1*`DCACHE_NLANES-1:0]                          perLaneAddr_activeMask_i              ,
+  input  logic  [`DCACHE_BLOCKOFFSETBITS*`DCACHE_NLANES-1:0]    perLaneAddr_blockOffset_i             ,
+  input  logic  [`BYTESOFWORD*`DCACHE_NLANES-1:0]               perLaneAddr_wordOffset1H_i            ,
+  input  logic  [`WORDLENGTH*`DCACHE_NLANES-1:0]                data_i                                ,
+  output logic  [1*`DCACHE_NLANES-1:0]                          perLaneAddrRemap_activeMask_o         , // no use
+  output logic  [`DCACHE_BLOCKOFFSETBITS*`DCACHE_NLANES-1:0]    perLaneAddrRemap_blockOffset_o        , // no use
+  output logic  [`BYTESOFWORD*`DCACHE_NLANES-1:0]               perLaneAddrRemap_wordOffset1H_o       ,
+  output logic  [`WORDLENGTH*`DCACHE_NLANES-1:0]                data_o                                 
 );
 
-  reg  [`DCACHE_NLANES*`DCACHE_NLANES-1:0]                    blockOffsetMatch          ;
-  wire [`DCACHE_NLANES*`DCACHE_NLANES*`BYTESOFWORD-1:0]       wordOffsetRemap           ;
-  wire [`DCACHE_NLANES*`DCACHE_NLANES*`WORDLENGTH-1:0]        dataRemap                 ;
-  //wire [`DCACHE_NLANES*`BYTESOFWORD-1:0]                      wordOffsetRemap_reduce    ;
-  //wire [`DCACHE_NLANES*`WORDLENGTH-1:0]                       dataRemap_reduce          ;
-  wire [`DCACHE_NLANES*(`DCACHE_NLANES-1)*`BYTESOFWORD-1:0]   wordOffsetRemap_tmp       ;
-  wire [`DCACHE_NLANES*(`DCACHE_NLANES-1)*`WORDLENGTH-1:0]    dataRemap_tmp             ;
+  logic [`DCACHE_NLANES*`DCACHE_NLANES-1:0]                    blockOffsetMatch          ;
+  logic [`DCACHE_NLANES*`DCACHE_NLANES*`BYTESOFWORD-1:0]       wordOffsetRemap           ;
+  logic [`DCACHE_NLANES*`DCACHE_NLANES*`WORDLENGTH-1:0]        dataRemap                 ;
+
+  logic [`DCACHE_NLANES*(`DCACHE_NLANES-1)*`BYTESOFWORD-1:0]   wordOffsetRemap_tmp       ;
+  logic [`DCACHE_NLANES*(`DCACHE_NLANES-1)*`WORDLENGTH-1:0]    dataRemap_tmp             ;
 
   genvar i,j;
   generate
@@ -73,7 +58,4 @@ module gen_data_map_same_word(
       end
     end
   endgenerate
-
-
-
 endmodule
