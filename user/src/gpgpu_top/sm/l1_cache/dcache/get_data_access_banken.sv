@@ -1,22 +1,11 @@
-/*
- * Copyright (c) 2023-2024 C*Core Technology Co.,Ltd,Suzhou.
- * Ventus-RTL is licensed under Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
- * You may obtain a copy of Mulan PSL v2 at:
- *          http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
- * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
- * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
- * See the Mulan PSL v2 for more details. */
-// Author: Chen, Qixiang
-// Description:
-`include "define.v"
+`include "../l1_cache.svh"
+import d_cache::*;
 
 `timescale 1ns/1ps
 
 module get_data_access_banken #(
-  parameter NBANK = `DCACHE_BLOCKWORDS ,
-  parameter NLANE = `DCACHE_NLANES      
+  parameter NBANK = `KIANA_DCACHE_BLOCKWORDS ,
+  parameter NLANE = `KIANA_DCACHE_NLANES      
 )(
   input       [$clog2(NBANK)*NLANE-1:0]     perLaneBlockIdx_i       ,
   input       [NLANE-1:0]                   perLaneVaild_i          ,

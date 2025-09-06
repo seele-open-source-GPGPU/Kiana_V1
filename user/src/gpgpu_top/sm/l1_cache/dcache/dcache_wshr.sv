@@ -1,10 +1,11 @@
 `include "../l1_cache.svh"
+import shared_mem::*;
 
 `timescale 1ns/1ps
 
 module dcache_wshr #(
-  parameter DEPTH = `DCACHE_WSHR_ENTRY          ,
-  parameter WIDTH = $clog2(`DCACHE_WSHR_ENTRY)    
+  parameter DEPTH = `KIANA_DCACHE_WSHR_ENTRY          ,
+  parameter WIDTH = $clog2(`KIANA_DCACHE_WSHR_ENTRY)    
 )(
   input  logic                                           clk                     ,
   input  logic                                           rst_n                   ,
@@ -12,7 +13,7 @@ module dcache_wshr #(
   // push
   input  logic                                           pushReq_valid_i         ,
   output logic                                           pushReq_ready_o         ,
-  input  logic [`DCACHE_SETIDXBITS+`DCACHE_TAGBITS-1:0]  pushReq_blockAddr_i     ,
+  input  logic [`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS-1:0]  pushReq_blockAddr_i     ,
   output logic                                           conflict_o              ,
   output logic [WIDTH-1:0]                               pushedIdx_o             ,
 
@@ -24,7 +25,7 @@ module dcache_wshr #(
   input  logic [WIDTH-1:0]                               popReq_bits_i             
 );
 
-  logic  [(`DCACHE_SETIDXBITS+`DCACHE_TAGBITS)*DEPTH-1:0]    blockAddrEntries        ;
+  logic  [(`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS)*DEPTH-1:0]    blockAddrEntries        ;
   logic  [DEPTH-1:0]                                         validEntries            ;
   logic  [DEPTH-1:0]                                         pushMatchMask           ;
   logic  [WIDTH-1:0]                                         nextEntryIdx            ;
@@ -38,8 +39,7 @@ module dcache_wshr #(
   genvar i;
   generate
     for (i=0; i<DEPTH; i=i+1) begin:mask_loop
-      assign  pushMatchMask[i] = (blockAddrEntries[(`DCACHE_SETIDXBITS+`DCACHE_TAGBITS)*(i+1)-1-:(`DCACHE_SETIDXBITS+`DCACHE_TAGBITS)]==pushReq_blockAddr_i) && validEntries[i];
-      //assign  pushMatchMask[i] = (pushReq_valid_i && pushReq_ready_o) ? (blockAddrEntries[(`DCACHE_SETIDXBITS+`DCACHE_TAGBITS)*(i+1)-1-:(`DCACHE_SETIDXBITS+`DCACHE_TAGBITS)]==pushReq_blockAddr_i) && validEntries[i] : 'd0;// && pushReq_valid_i && pushReq_ready_o;
+      assign  pushMatchMask[i] = (blockAddrEntries[(`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS)*(i+1)-1-:(`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS)]==pushReq_blockAddr_i) && validEntries[i];
     end
   endgenerate
 
@@ -54,10 +54,10 @@ module dcache_wshr #(
       blockAddrEntries  <= 'b0;
       validEntries      <= 'b0;
     end else if(pop_push_in_same_cycle) begin
-      blockAddrEntries[(`DCACHE_SETIDXBITS+`DCACHE_TAGBITS)*(popReq_bits_i+1)-1-:(`DCACHE_SETIDXBITS+`DCACHE_TAGBITS)]  <= pushReq_blockAddr_i;
+      blockAddrEntries[(`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS)*(popReq_bits_i+1)-1-:(`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS)]  <= pushReq_blockAddr_i;
       validEntries[popReq_bits_i]         <= 1'b1;
     end else if(pushReq_valid_i && pushReq_ready_o) begin
-      blockAddrEntries[(`DCACHE_SETIDXBITS+`DCACHE_TAGBITS)*(nextEntryIdx+1)-1-:(`DCACHE_SETIDXBITS+`DCACHE_TAGBITS)]  <= pushReq_blockAddr_i;
+      blockAddrEntries[(`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS)*(nextEntryIdx+1)-1-:(`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS)]  <= pushReq_blockAddr_i;
       validEntries[nextEntryIdx]          <= 1'b1;
     end else if(popReq_valid_i) begin
       validEntries[popReq_bits_i]         <= 1'b0;

@@ -1,68 +1,56 @@
-/*
- * Copyright (c) 2023-2024 C*Core Technology Co.,Ltd,Suzhou.
- * Ventus-RTL is licensed under Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
- * You may obtain a copy of Mulan PSL v2 at:
- *          http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
- * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
- * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
- * See the Mulan PSL v2 for more details. */
-// Author: Tan, Zhiyuan
-// Description: Save read miss requests
-
 `timescale 1ns/1ns
 
-`include "define.v"
+`include "../l1_cache.svh"
+import shared_mem::*;
 
 module l1_mshr (
   input                                  clk                     ,
   input                                  rst_n                   ,
   input                                  probe_valid_i           ,
-  input  [`BABITS-1:0]                   probe_blockaddr_i       ,
+  input  [`KIANA_BABITS-1:0]                   probe_blockaddr_i       ,
   input                                  missreq_valid_i         ,
   output                                 missreq_ready_o         ,
-  input  [`BABITS-1:0]                   missreq_blockaddr_i     ,
-  input  [`TIWIDTH-1:0]                  missreq_targetinfo_i    ,
+  input  [`KIANA_BABITS-1:0]                   missreq_blockaddr_i     ,
+  input  [`KIANA_TIWIDTH-1:0]                  missreq_targetinfo_i    ,
   input                                  missrsp_in_valid_i      ,
   output                                 missrsp_in_ready_o      ,
-  input  [$clog2(`DCACHE_MSHRENTRY)-1:0] missrsp_in_instrid_i    ,
+  input  [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] missrsp_in_instrid_i    ,
   output                                 missrsp_out_valid_o     ,
-  output [`BABITS-1:0]                   missrsp_out_blockaddr_o ,
-  output [`TIWIDTH-1:0]                  missrsp_out_targetinfo_o,
+  output [`KIANA_BABITS-1:0]                   missrsp_out_blockaddr_o ,
+  output [`KIANA_TIWIDTH-1:0]                  missrsp_out_targetinfo_o,
   output                                 empty_o                 ,
   output                                 probe_status_o          ,
   output [2:0]                           mshr_status_st0_o       ,
   output [2:0]                           probe_out_mshr_status_o ,
-  output [$clog2(`DCACHE_MSHRENTRY)-1:0] probe_out_a_source_o    ,
+  output [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] probe_out_a_source_o    ,
   input                                  stage1_ready_i          ,
   input                                  stage2_ready_i          
 );
 
-  reg [`BABITS*`DCACHE_MSHRENTRY-1:0]                         blockaddr_access ;
+  reg [`KIANA_BABITS*`KIANA_DCACHE_MSHRENTRY-1:0]                         blockaddr_access ;
   //target info can be replaced with SRAM
-  reg [`TIWIDTH*(`DCACHE_MSHRENTRY*`DCACHE_MSHRSUBENTRY)-1:0] targetinfo_access;  
-  reg [`DCACHE_MSHRENTRY*`DCACHE_MSHRSUBENTRY-1:0]            subentry_valid   ;
+  reg [`KIANA_TIWIDTH*(`KIANA_DCACHE_MSHRENTRY*`KIANA_DCACHE_MSHRSUBENTRY)-1:0] targetinfo_access;  
+  reg [`KIANA_DCACHE_MSHRENTRY*`KIANA_DCACHE_MSHRSUBENTRY-1:0]            subentry_valid   ;
 
-  wire [`DCACHE_MSHRENTRY-1:0]         entry_valid              ; 
-  wire [$clog2(`DCACHE_MSHRENTRY)-1:0] entry_matchmiss_rsp      ;
-  wire [`DCACHE_MSHRENTRY-1:0]         entry_match_probe        ;
-  wire [`DCACHE_MSHRENTRY-1:0]         entry_match_probe_reg    ;
-  wire [`DCACHE_MSHRSUBENTRY-1:0]      subentry_selected        ;
-  wire [$clog2(`DCACHE_MSHRENTRY)-1:0] entry_match_probe_bin    ;
-  wire [$clog2(`DCACHE_MSHRENTRY)-1:0] entry_match_probe_bin_reg;
+  wire [`KIANA_DCACHE_MSHRENTRY-1:0]         entry_valid              ; 
+  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] entry_matchmiss_rsp      ;
+  wire [`KIANA_DCACHE_MSHRENTRY-1:0]         entry_match_probe        ;
+  wire [`KIANA_DCACHE_MSHRENTRY-1:0]         entry_match_probe_reg    ;
+  wire [`KIANA_DCACHE_MSHRSUBENTRY-1:0]      subentry_selected        ;
+  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] entry_match_probe_bin    ;
+  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] entry_match_probe_bin_reg;
 
   genvar i;
-  generate for(i=0;i<`DCACHE_MSHRENTRY;i=i+1) begin: ENTRY_VALID
-    assign entry_valid[i]           = |subentry_valid[`DCACHE_MSHRSUBENTRY*(i+1)-1:`DCACHE_MSHRSUBENTRY*i]                ;
-    assign entry_match_probe[i]     = (blockaddr_access[`BABITS*(i+1)-1:`BABITS*i]==probe_blockaddr_i) && entry_valid[i]  ;
-    assign entry_match_probe_reg[i] = (blockaddr_access[`BABITS*(i+1)-1:`BABITS*i]==missreq_blockaddr_i) && entry_valid[i];
+  generate for(i=0;i<`KIANA_DCACHE_MSHRENTRY;i=i+1) begin: ENTRY_VALID
+    assign entry_valid[i]           = |subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*(i+1)-1:`KIANA_DCACHE_MSHRSUBENTRY*i]                ;
+    assign entry_match_probe[i]     = (blockaddr_access[`KIANA_BABITS*(i+1)-1:`KIANA_BABITS*i]==probe_blockaddr_i) && entry_valid[i]  ;
+    assign entry_match_probe_reg[i] = (blockaddr_access[`KIANA_BABITS*(i+1)-1:`KIANA_BABITS*i]==missreq_blockaddr_i) && entry_valid[i];
   end
   endgenerate
 
   one2bin #(
-    .ONE_WIDTH (`DCACHE_MSHRENTRY        ),
-    .BIN_WIDTH ($clog2(`DCACHE_MSHRENTRY))
+    .ONE_WIDTH (`KIANA_DCACHE_MSHRENTRY        ),
+    .BIN_WIDTH ($clog2(`KIANA_DCACHE_MSHRENTRY))
   )
   entry_match_probe_one2bin (
     .oh  (entry_match_probe    ),
@@ -70,8 +58,8 @@ module l1_mshr (
   );
 
   one2bin #(
-    .ONE_WIDTH (`DCACHE_MSHRENTRY        ),
-    .BIN_WIDTH ($clog2(`DCACHE_MSHRENTRY))
+    .ONE_WIDTH (`KIANA_DCACHE_MSHRENTRY        ),
+    .BIN_WIDTH ($clog2(`KIANA_DCACHE_MSHRENTRY))
   )
   entry_match_probe_reg_one2bin (
     .oh  (entry_match_probe_reg    ),
@@ -79,15 +67,15 @@ module l1_mshr (
   );
   
   assign entry_matchmiss_rsp = missrsp_in_instrid_i;
-  assign subentry_selected   = (entry_match_probe=='d0) ? 'd0 : subentry_valid[`DCACHE_MSHRSUBENTRY*(entry_match_probe_bin+1)-1 -:`DCACHE_MSHRSUBENTRY];
+  assign subentry_selected   = (entry_match_probe=='d0) ? 'd0 : subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*(entry_match_probe_bin+1)-1 -:`KIANA_DCACHE_MSHRSUBENTRY];
 
   //subentry status
   wire                                    subentry_status_almfull;
   wire                                    subentry_status_full   ;
-  wire [$clog2(`DCACHE_MSHRSUBENTRY)-1:0] subentry_status_next   ;
+  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] subentry_status_next   ;
 
   get_entry_status_req #(
-    .NUM_ENTRY (`DCACHE_MSHRSUBENTRY)
+    .NUM_ENTRY (`KIANA_DCACHE_MSHRSUBENTRY)
   )
   subentry_status (
     .valid_list_i (subentry_selected      ),
@@ -99,10 +87,10 @@ module l1_mshr (
   //entry status
   wire                                 entry_status_almfull;
   wire                                 entry_status_full   ;
-  wire [$clog2(`DCACHE_MSHRENTRY)-1:0] entry_status_next   ;
+  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] entry_status_next   ;
 
   get_entry_status_req #(
-    .NUM_ENTRY (`DCACHE_MSHRENTRY)
+    .NUM_ENTRY (`KIANA_DCACHE_MSHRENTRY)
   )
   entry_status (
     .valid_list_i (entry_valid         ),
@@ -112,14 +100,14 @@ module l1_mshr (
   );
 
   //subentry status for rsp
-  wire [`DCACHE_MSHRSUBENTRY-1:0]         subentry_status_rsp_valid_list ;
-  wire [$clog2(`DCACHE_MSHRSUBENTRY)-1:0] subentry_status_rsp_next2cancel;
-  wire [$clog2(`DCACHE_MSHRSUBENTRY):0]   subentry_status_rsp_used       ;
+  wire [`KIANA_DCACHE_MSHRSUBENTRY-1:0]         subentry_status_rsp_valid_list ;
+  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] subentry_status_rsp_next2cancel;
+  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY):0]   subentry_status_rsp_used       ;
 
-  assign subentry_status_rsp_valid_list = subentry_valid[`DCACHE_MSHRSUBENTRY*(entry_matchmiss_rsp+1)-1 -:`DCACHE_MSHRSUBENTRY];
+  assign subentry_status_rsp_valid_list = subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*(entry_matchmiss_rsp+1)-1 -:`KIANA_DCACHE_MSHRSUBENTRY];
 
   get_entry_status_rsp #(
-    .NUM_ENTRY (`DCACHE_MSHRSUBENTRY)
+    .NUM_ENTRY (`KIANA_DCACHE_MSHRSUBENTRY)
   )
   subentry_status_rsp (
     .valid_list_i  (subentry_status_rsp_valid_list ),
@@ -130,19 +118,19 @@ module l1_mshr (
   // pipeline reg: mshr_st1
   wire                                                      mshr_st1_enq_ready        ;
   wire                                                      mshr_st1_enq_valid        ;
-  wire [`DCACHE_MSHRENTRY+$clog2(`DCACHE_MSHRSUBENTRY)-1:0] mshr_st1_enq_bits         ;
+  wire [`KIANA_DCACHE_MSHRENTRY+$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] mshr_st1_enq_bits         ;
   wire                                                      mshr_st1_deq_valid        ;
   wire                                                      mshr_st1_deq_ready        ;
-  wire [`DCACHE_MSHRENTRY+$clog2(`DCACHE_MSHRSUBENTRY)-1:0] mshr_st1_deq_bits         ;
-  wire [`DCACHE_MSHRENTRY-1:0]                              mshr_st1_entry_match_probe;
-  wire [$clog2(`DCACHE_MSHRSUBENTRY)-1:0]                   mshr_st1_subentry_idx     ;
+  wire [`KIANA_DCACHE_MSHRENTRY+$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] mshr_st1_deq_bits         ;
+  wire [`KIANA_DCACHE_MSHRENTRY-1:0]                              mshr_st1_entry_match_probe;
+  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0]                   mshr_st1_subentry_idx     ;
 
   assign mshr_st1_enq_valid = probe_valid_i                           ;
   assign mshr_st1_deq_ready = stage1_ready_i                          ;
   assign mshr_st1_enq_bits  = {entry_match_probe,subentry_status_next};
 
   stream_fifo_pipe_true #(
-    .DATA_WIDTH (`DCACHE_MSHRENTRY+$clog2(`DCACHE_MSHRSUBENTRY)),
+    .DATA_WIDTH (`KIANA_DCACHE_MSHRENTRY+$clog2(`KIANA_DCACHE_MSHRSUBENTRY)),
     .FIFO_DEPTH (1                                             )
   )
   mshr_st1 (
@@ -156,8 +144,8 @@ module l1_mshr (
     .r_data_o  (mshr_st1_deq_bits )
   );
 
-  assign mshr_st1_entry_match_probe = mshr_st1_deq_bits[`DCACHE_MSHRENTRY+$clog2(`DCACHE_MSHRSUBENTRY)-1:$clog2(`DCACHE_MSHRSUBENTRY)];
-  assign mshr_st1_subentry_idx      = mshr_st1_deq_bits[$clog2(`DCACHE_MSHRSUBENTRY)-1:0];
+  assign mshr_st1_entry_match_probe = mshr_st1_deq_bits[`KIANA_DCACHE_MSHRENTRY+$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:$clog2(`KIANA_DCACHE_MSHRSUBENTRY)];
+  assign mshr_st1_subentry_idx      = mshr_st1_deq_bits[$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0];
 
   //TODO: check these status
 
@@ -294,13 +282,13 @@ module l1_mshr (
     end
   end
 
-  wire [$clog2(`DCACHE_MSHRENTRY)-1:0]    real_sram_addr_up    ;
-  wire [$clog2(`DCACHE_MSHRSUBENTRY)-1:0] real_sram_addr_down  ;
-  wire [$clog2(`DCACHE_MSHRENTRY)-1:0]    entry_match_probe_st1;
+  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0]    real_sram_addr_up    ;
+  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] real_sram_addr_down  ;
+  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0]    entry_match_probe_st1;
 
   one2bin #(
-    .ONE_WIDTH (`DCACHE_MSHRENTRY        ),
-    .BIN_WIDTH ($clog2(`DCACHE_MSHRENTRY))
+    .ONE_WIDTH (`KIANA_DCACHE_MSHRENTRY        ),
+    .BIN_WIDTH ($clog2(`KIANA_DCACHE_MSHRENTRY))
   )
   entry_match_probe_st1_one2bin (
     .oh  (mshr_st1_entry_match_probe),
@@ -312,18 +300,18 @@ module l1_mshr (
 
   //targetinfo_access
   genvar n,m;
-  generate for(n=0;n<`DCACHE_MSHRENTRY;n=n+1) begin: INFO_UP
-    for(m=0;m<`DCACHE_MSHRSUBENTRY;m=m+1) begin: INFO_DOWN
+  generate for(n=0;n<`KIANA_DCACHE_MSHRENTRY;n=n+1) begin: INFO_UP
+    for(m=0;m<`KIANA_DCACHE_MSHRSUBENTRY;m=m+1) begin: INFO_DOWN
       always@(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
-          targetinfo_access[`TIWIDTH*(`DCACHE_MSHRSUBENTRY*n+m+1)-1 -:`TIWIDTH] <= 'd0;// targetinfo_access[n][m]
+          targetinfo_access[`KIANA_TIWIDTH*(`KIANA_DCACHE_MSHRSUBENTRY*n+m+1)-1 -:`KIANA_TIWIDTH] <= 'd0;// targetinfo_access[n][m]
         end
         else begin
           if(missreq_valid_i && missreq_ready_o && mshr_st1_deq_ready) begin
-            targetinfo_access[`TIWIDTH*(`DCACHE_MSHRSUBENTRY*n+m+1)-1 -:`TIWIDTH] <= ((n==real_sram_addr_up)&&(m==real_sram_addr_down)) ? missreq_targetinfo_i : targetinfo_access[`TIWIDTH*(`DCACHE_MSHRSUBENTRY*n+m+1)-1 -:`TIWIDTH];
+            targetinfo_access[`KIANA_TIWIDTH*(`KIANA_DCACHE_MSHRSUBENTRY*n+m+1)-1 -:`KIANA_TIWIDTH] <= ((n==real_sram_addr_up)&&(m==real_sram_addr_down)) ? missreq_targetinfo_i : targetinfo_access[`KIANA_TIWIDTH*(`KIANA_DCACHE_MSHRSUBENTRY*n+m+1)-1 -:`KIANA_TIWIDTH];
           end
           else begin
-            targetinfo_access[`TIWIDTH*(`DCACHE_MSHRSUBENTRY*n+m+1)-1 -:`TIWIDTH] <= targetinfo_access[`TIWIDTH*(`DCACHE_MSHRSUBENTRY*n+m+1)-1 -:`TIWIDTH];
+            targetinfo_access[`KIANA_TIWIDTH*(`KIANA_DCACHE_MSHRSUBENTRY*n+m+1)-1 -:`KIANA_TIWIDTH] <= targetinfo_access[`KIANA_TIWIDTH*(`KIANA_DCACHE_MSHRSUBENTRY*n+m+1)-1 -:`KIANA_TIWIDTH];
           end
         end
       end
@@ -333,17 +321,17 @@ module l1_mshr (
 
   //blockaddr_access
   genvar j;
-  generate for(j=0;j<`DCACHE_MSHRENTRY;j=j+1) begin: BLOCKADDR
+  generate for(j=0;j<`KIANA_DCACHE_MSHRENTRY;j=j+1) begin: BLOCKADDR
     always@(posedge clk or negedge rst_n) begin
       if(!rst_n) begin
-        blockaddr_access[`BABITS*(j+1)-1:`BABITS*j] <= 'd0;
+        blockaddr_access[`KIANA_BABITS*(j+1)-1:`KIANA_BABITS*j] <= 'd0;
       end
       else begin
         if(missreq_valid_i && missreq_ready_o && mshr_st1_deq_ready && (mshr_status_st1==3'b000)) begin
-          blockaddr_access[`BABITS*(j+1)-1:`BABITS*j] <= (j==entry_status_next) ? missreq_blockaddr_i : blockaddr_access[`BABITS*(j+1)-1:`BABITS*j];
+          blockaddr_access[`KIANA_BABITS*(j+1)-1:`KIANA_BABITS*j] <= (j==entry_status_next) ? missreq_blockaddr_i : blockaddr_access[`KIANA_BABITS*(j+1)-1:`KIANA_BABITS*j];
         end
         else begin
-          blockaddr_access[`BABITS*(j+1)-1:`BABITS*j] <= blockaddr_access[`BABITS*(j+1)-1:`BABITS*j];
+          blockaddr_access[`KIANA_BABITS*(j+1)-1:`KIANA_BABITS*j] <= blockaddr_access[`KIANA_BABITS*(j+1)-1:`KIANA_BABITS*j];
         end
       end
     end
@@ -352,27 +340,27 @@ module l1_mshr (
 
   //output target_info and blockaddr
 
-  wire [`TIWIDTH*`DCACHE_MSHRSUBENTRY-1:0] missrsp_targetinfo_entry_st1;
-  wire [`TIWIDTH-1:0]                      missrsp_targetinfo_st1      ;
-  wire [`BABITS-1:0]                       missrsp_blockaddr_st1       ;
+  wire [`KIANA_TIWIDTH*`KIANA_DCACHE_MSHRSUBENTRY-1:0] missrsp_targetinfo_entry_st1;
+  wire [`KIANA_TIWIDTH-1:0]                      missrsp_targetinfo_st1      ;
+  wire [`KIANA_BABITS-1:0]                       missrsp_blockaddr_st1       ;
 
   //to make sure the last mshr main entry has cleaned up 
   reg                                  missrsp_in_valid_st1        ;
-  reg [$clog2(`DCACHE_MSHRENTRY)-1:0]  entry_matchmiss_rsp_st1     ;
+  reg [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0]  entry_matchmiss_rsp_st1     ;
   
   reg                                  missrsp_in_valid_st1_clean  ;
 
-  wire [`DCACHE_MSHRSUBENTRY-1:0]         subentry_status_rsp_valid_list_st1        ;
-  wire [$clog2(`DCACHE_MSHRSUBENTRY)-1:0] subentry_status_rsp_next2cancel_st1       ;
-  wire [$clog2(`DCACHE_MSHRSUBENTRY):0]   subentry_status_rsp_used_st1              ;
-  wire [`DCACHE_MSHRSUBENTRY-1:0]         subentry_status_rsp_valid_list_reverse_st1;
-  wire [$clog2(`DCACHE_MSHRSUBENTRY)-1:0] subentry_status_rsp_now2cancel_st1        ;
+  wire [`KIANA_DCACHE_MSHRSUBENTRY-1:0]         subentry_status_rsp_valid_list_st1        ;
+  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] subentry_status_rsp_next2cancel_st1       ;
+  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY):0]   subentry_status_rsp_used_st1              ;
+  wire [`KIANA_DCACHE_MSHRSUBENTRY-1:0]         subentry_status_rsp_valid_list_reverse_st1;
+  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] subentry_status_rsp_now2cancel_st1        ;
 
-  assign subentry_status_rsp_valid_list_st1 = subentry_valid[`DCACHE_MSHRSUBENTRY*(entry_matchmiss_rsp_st1+1)-1 -:`DCACHE_MSHRSUBENTRY];
+  assign subentry_status_rsp_valid_list_st1 = subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*(entry_matchmiss_rsp_st1+1)-1 -:`KIANA_DCACHE_MSHRSUBENTRY];
 
   
   get_entry_status_rsp #(
-    .NUM_ENTRY (`DCACHE_MSHRSUBENTRY)
+    .NUM_ENTRY (`KIANA_DCACHE_MSHRSUBENTRY)
   )
   subentry_status_rsp_st1 (
     .valid_list_i  (subentry_status_rsp_valid_list_st1 ),
@@ -381,7 +369,7 @@ module l1_mshr (
   );
 
   input_reverse #(
-    .DATA_WIDTH (`DCACHE_MSHRSUBENTRY)
+    .DATA_WIDTH (`KIANA_DCACHE_MSHRSUBENTRY)
   )
   reverse_list_st1 (
     .data_i (subentry_status_rsp_valid_list_st1        ),
@@ -389,8 +377,8 @@ module l1_mshr (
   );
 
   find_first #(
-    .DATA_WIDTH (`DCACHE_MSHRSUBENTRY        ),
-    .DATA_DEPTH ($clog2(`DCACHE_MSHRSUBENTRY))
+    .DATA_WIDTH (`KIANA_DCACHE_MSHRSUBENTRY        ),
+    .DATA_DEPTH ($clog2(`KIANA_DCACHE_MSHRSUBENTRY))
   )
   find_now_to_cancel (
     .data_i (subentry_status_rsp_valid_list_reverse_st1),
@@ -412,33 +400,33 @@ module l1_mshr (
     end
   end
 
-  assign missrsp_targetinfo_entry_st1 = targetinfo_access[`TIWIDTH*`DCACHE_MSHRSUBENTRY*(entry_matchmiss_rsp_st1+1)-1 -:`TIWIDTH*`DCACHE_MSHRSUBENTRY];
-  assign missrsp_targetinfo_st1       = missrsp_targetinfo_entry_st1[`TIWIDTH*(subentry_status_rsp_next2cancel_st1+1)-1 -: `TIWIDTH]                  ;
-  assign missrsp_blockaddr_st1        = blockaddr_access[`BABITS*(entry_matchmiss_rsp_st1+1)-1 -:`BABITS]                                             ;
+  assign missrsp_targetinfo_entry_st1 = targetinfo_access[`KIANA_TIWIDTH*`KIANA_DCACHE_MSHRSUBENTRY*(entry_matchmiss_rsp_st1+1)-1 -:`KIANA_TIWIDTH*`KIANA_DCACHE_MSHRSUBENTRY];
+  assign missrsp_targetinfo_st1       = missrsp_targetinfo_entry_st1[`KIANA_TIWIDTH*(subentry_status_rsp_next2cancel_st1+1)-1 -: `KIANA_TIWIDTH]                  ;
+  assign missrsp_blockaddr_st1        = blockaddr_access[`KIANA_BABITS*(entry_matchmiss_rsp_st1+1)-1 -:`KIANA_BABITS]                                             ;
 
   //update valid_list
   genvar x,y;
-  generate for(x=0;x<`DCACHE_MSHRENTRY;x=x+1) begin: VALID_UP
-    for(y=0;y<`DCACHE_MSHRSUBENTRY;y=y+1) begin: VALID_DOWN
+  generate for(x=0;x<`KIANA_DCACHE_MSHRENTRY;x=x+1) begin: VALID_UP
+    for(y=0;y<`KIANA_DCACHE_MSHRSUBENTRY;y=y+1) begin: VALID_DOWN
       always@(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
-          subentry_valid[`DCACHE_MSHRSUBENTRY*x+y] <= 'd0;
+          subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*x+y] <= 'd0;
         end
         else begin
           if(missreq_valid_i && missreq_ready_o && primary_miss_st1) begin
-            subentry_valid[`DCACHE_MSHRSUBENTRY*x+y] <= ((x==entry_status_next)&&(y=='d0)) ? 1'b1 : subentry_valid[`DCACHE_MSHRSUBENTRY*x+y];
+            subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*x+y] <= ((x==entry_status_next)&&(y=='d0)) ? 1'b1 : subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*x+y];
           end
           else if(missrsp_in_valid_i && missrsp_in_ready_o) begin
-            subentry_valid[`DCACHE_MSHRSUBENTRY*x+y] <= ((x==entry_matchmiss_rsp)&&(y==subentry_status_rsp_next2cancel)) ? 1'b0 : subentry_valid[`DCACHE_MSHRSUBENTRY*x+y];
+            subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*x+y] <= ((x==entry_matchmiss_rsp)&&(y==subentry_status_rsp_next2cancel)) ? 1'b0 : subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*x+y];
           end
           else if(missrsp_in_valid_st1 && subentry_status_rsp_used_st1>=1) begin
-            subentry_valid[`DCACHE_MSHRSUBENTRY*x+y] <= ((x==entry_matchmiss_rsp_st1)&&(y==subentry_status_rsp_now2cancel_st1)) ? 1'b0 : subentry_valid[`DCACHE_MSHRSUBENTRY*x+y];
+            subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*x+y] <= ((x==entry_matchmiss_rsp_st1)&&(y==subentry_status_rsp_now2cancel_st1)) ? 1'b0 : subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*x+y];
           end
           else if(missreq_valid_i && missreq_ready_o && secondary_miss_st1 && mshr_st1_deq_valid && mshr_st1_deq_ready) begin
-            subentry_valid[`DCACHE_MSHRSUBENTRY*x+y] <= ((x==entry_match_probe_bin_reg)&&(y==mshr_st1_subentry_idx)) ? 1'b1 : subentry_valid[`DCACHE_MSHRSUBENTRY*x+y];
+            subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*x+y] <= ((x==entry_match_probe_bin_reg)&&(y==mshr_st1_subentry_idx)) ? 1'b1 : subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*x+y];
           end
           else begin
-            subentry_valid[`DCACHE_MSHRSUBENTRY*x+y] <= subentry_valid[`DCACHE_MSHRSUBENTRY*x+y];
+            subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*x+y] <= subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*x+y];
           end
         end
       end
