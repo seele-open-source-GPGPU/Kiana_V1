@@ -7,158 +7,158 @@ module tag_access_top_v2 #(
     parameter NUM_WAY  = `KIANA_DCACHE_NWAYS,   // 2
     parameter TAG_BITS = `KIANA_DCACHE_TAGBITS  // 24   
 ) (
-    input clk,
-    input rst_n,
+    input logic clk,
+    input logic rst_n,
 
     // From coreReq_pipe0
-    input                        probeRead_valid_i,   // Probe Channel
-    output                       probeRead_ready_o,   // Probe Channel
-    input  [$clog2(NUM_SET)-1:0] probeRead_setIdx_i,  // Probe Channel
-    input  [       TAG_BITS-1:0] tagFromCore_st1_i,
-    input                        probeIsWrite_st1_i,
+    input logic                        probeRead_valid_i,   // Probe Channel
+    output logic                       probeRead_ready_o,   // Probe Channel
+    input logic  [$clog2(NUM_SET)-1:0] probeRead_setIdx_i,  // Probe Channel
+    input logic  [       TAG_BITS-1:0] tagFromCore_st1_i,
+    input logic                        probeIsWrite_st1_i,
 
     //From coreReq_pipe1
-    input coreReq_q_deq_fire_i,
+    input logic coreReq_q_deq_fire_i,
 
     // To coreReq_pipe1
-    output               hit_st1_o,
-    output [NUM_WAY-1:0] waymaskHit_st1_o,
+    output logic               hit_st1_o,
+    output logic [NUM_WAY-1:0] waymaskHit_st1_o,
 
     // From memRsp_pipe0
-    input                       allocateWrite_valid_i,   // Allocate Channel
-    input [$clog2(NUM_SET)-1:0] allocateWrite_setIdx_i,  // Allocate Channel
-    input [       TAG_BITS-1:0] allocateWriteData_st1_i,
+    input logic                       allocateWrite_valid_i,   // Allocate Channel
+    input logic [$clog2(NUM_SET)-1:0] allocateWrite_setIdx_i,  // Allocate Channel
+    input logic [       TAG_BITS-1:0] allocateWriteData_st1_i,
 
     // From memRsp_pipe1
-    input allocateWriteTagSRAMWValid_st1_i,
+    input logic allocateWriteTagSRAMWValid_st1_i,
 
     // for flush: in order to not change way_dirty
-    input mem_req_fire_i,
+    input logic mem_req_fire_i,
 
     // To memRsp_pipe1
-    output                   needReplace_o,
-    output [    NUM_WAY-1:0] waymaskReplacement_st1_o,  // onehot,for SRAMTemplate
-    output [`KIANA_XLEN-1:0] addrReplacement_st1_o,
+    output logic                   needReplace_o,
+    output logic [    NUM_WAY-1:0] waymaskReplacement_st1_o,  // onehot,for SRAMTemplate
+    output logic [`KIANA_XLEN-1:0] addrReplacement_st1_o,
 
     // For InvOrFlu
-    output                       hasDirty_st0_o,
-    output [$clog2(NUM_SET)-1:0] dirtySetIdx_st0_o,
-    output [$clog2(NUM_WAY)-1:0] dirtyWayMask_st0_o,
-    output [       TAG_BITS-1:0] dirtyTag_st1_o,
+    output logic                       hasDirty_st0_o,
+    output logic [$clog2(NUM_SET)-1:0] dirtySetIdx_st0_o,
+    output logic [$clog2(NUM_WAY)-1:0] dirtyWayMask_st0_o,
+    output logic [       TAG_BITS-1:0] dirtyTag_st1_o,
 
     // For InvOrFlu and LRSC
-    input                               flushChoosen_valid_i,
-    input [$clog2(NUM_SET)+NUM_WAY-1:0] flushChoosen_i,        // [flushChoosen_setIdx,flushChoosen_waymask]
+    input logic                               flushChoosen_valid_i,
+    input logic [$clog2(NUM_SET)+NUM_WAY-1:0] flushChoosen_i,        // [flushChoosen_setIdx,flushChoosen_waymask]
 
     // For Inv
-    input invalidateAll_i,
-    input tagready_st1_i
+    input logic invalidateAll_i,
+    input logic tagready_st1_i
 
 );
 
-  wire                                              probeRead_fire;
-  reg                                               probeRead_fire_q;
-  wire                                              allocateWrite_fire;
-  reg                                               allocateWrite_fire_q;
+  logic                                             probeRead_fire;
+  logic                                             probeRead_fire_q;
+  logic                                             allocateWrite_fire;
+  logic                                             allocateWrite_fire_q;
 
 
   // for probeRead buffer
-  wire                                              probeRead_buf_valid;
-  wire                                              probeRead_buf_ready;
-  wire [                       $clog2(NUM_SET)-1:0] probeRead_buf_setIdx;
-  wire                                              probeRead_ready_out;
+  logic                                              probeRead_buf_valid;
+  logic                                              probeRead_buf_ready;
+  logic [                       $clog2(NUM_SET)-1:0] probeRead_buf_setIdx;
+  logic                                              probeRead_ready_out;
 
   // for tagAccess read req arbiter(3to1)
-  wire [                                     3-1:0] tagAccessRArb_in_valid;
-  wire [                                     3-1:0] tagAccessRArb_in_ready;
-  wire [                     $clog2(NUM_SET)*3-1:0] tagAccessRArb_in_setIdx;
-  wire [                                     3-1:0] tagAccessRArb_valid_oh;
-  wire [                                     2-1:0] tagAccessRArb_valid_bin;
-  wire                                              tagAccessRArb_out_valid;
-  wire [                       $clog2(NUM_SET)-1:0] tagAccessRArb_out_setIdx;
+  logic [                                     3-1:0] tagAccessRArb_in_valid;
+  logic [                                     3-1:0] tagAccessRArb_in_ready;
+  logic [                     $clog2(NUM_SET)*3-1:0] tagAccessRArb_in_setIdx;
+  logic [                                     3-1:0] tagAccessRArb_valid_oh;
+  logic [                                     2-1:0] tagAccessRArb_valid_bin;
+  logic                                              tagAccessRArb_out_valid;
+  logic [                       $clog2(NUM_SET)-1:0] tagAccessRArb_out_setIdx;
 
   // for timeAccess write req arbiter(2to1)
-  wire [                                     2-1:0] timeAccessWArb_in_valid;
-  wire [`KIANA_LENGTH_REPLACE_TIME*NUM_WAY*2-1 : 0] timeAccessWArb_in_data;
-  wire [                             NUM_WAY*2-1:0] timeAccessWArb_in_waymask;
-  wire [                     $clog2(NUM_SET)*2-1:0] timeAccessWArb_in_setIdx;
-  wire [                                     2-1:0] timeAccessWArb_valid_oh;
-  wire                                              timeAccessWArb_valid_bin;
-  wire                                              timeAccessWArb_out_valid;
-  wire [  `KIANA_LENGTH_REPLACE_TIME*NUM_WAY-1 : 0] timeAccessWArb_out_data;
-  wire [                               NUM_WAY-1:0] timeAccessWArb_out_waymask;
-  wire [                       $clog2(NUM_SET)-1:0] timeAccessWArb_out_setIdx;
+  logic [                                     2-1:0] timeAccessWArb_in_valid;
+  logic [`KIANA_LENGTH_REPLACE_TIME*NUM_WAY*2-1 : 0] timeAccessWArb_in_data;
+  logic [                             NUM_WAY*2-1:0] timeAccessWArb_in_waymask;
+  logic [                     $clog2(NUM_SET)*2-1:0] timeAccessWArb_in_setIdx;
+  logic [                                     2-1:0] timeAccessWArb_valid_oh;
+  logic                                              timeAccessWArb_valid_bin;
+  logic                                              timeAccessWArb_out_valid;
+  logic [  `KIANA_LENGTH_REPLACE_TIME*NUM_WAY-1 : 0] timeAccessWArb_out_data;
+  logic [                               NUM_WAY-1:0] timeAccessWArb_out_waymask;
+  logic [                       $clog2(NUM_SET)-1:0] timeAccessWArb_out_setIdx;
 
   // for timeAccess write req conflict
-  wire                                              timeAccessWArb_conflict;
-  reg                                               timeAccessWArb_conflict_q;
+  logic                                              timeAccessWArb_conflict;
+  logic                                               timeAccessWArb_conflict_q;
 
   // RegNext
-  reg  [                       $clog2(NUM_SET)-1:0] probeRead_setIdx_q;
+  logic  [                       $clog2(NUM_SET)-1:0] probeRead_setIdx_q;
 
 
   // for tagchecker module
-  wire [                      TAG_BITS*NUM_WAY-1:0] tagchecker_tag_of_set;
-  wire [                              TAG_BITS-1:0] tagchecker_tag_from_pipe;
-  wire [                               NUM_WAY-1:0] tagchecker_valid_of_way;
-  wire [                               NUM_WAY-1:0] tagchecker_waymask;
-  wire                                              tagchecker_cache_hit;
-  wire [                       $clog2(NUM_WAY)-1:0] tagchecker_waymask_bin;
+  logic [                      TAG_BITS*NUM_WAY-1:0] tagchecker_tag_of_set;
+  logic [                              TAG_BITS-1:0] tagchecker_tag_from_pipe;
+  logic [                               NUM_WAY-1:0] tagchecker_valid_of_way;
+  logic [                               NUM_WAY-1:0] tagchecker_waymask;
+  logic                                              tagchecker_cache_hit;
+  logic [                       $clog2(NUM_WAY)-1:0] tagchecker_waymask_bin;
 
   // register for way vaild and dirty
-  reg  [                       NUM_WAY*NUM_SET-1:0] way_valid;
-  reg  [                       NUM_WAY*NUM_SET-1:0] way_dirty;
+  logic  [                       NUM_WAY*NUM_SET-1:0] way_valid;
+  logic  [                       NUM_WAY*NUM_SET-1:0] way_dirty;
 
   // RegEnable
-  reg  [                       $clog2(NUM_SET)-1:0] probeRead_setIdx_st1;
-  reg  [                       $clog2(NUM_SET)-1:0] allocateWrite_setIdx_st1;
+  logic  [                       $clog2(NUM_SET)-1:0] probeRead_setIdx_st1;
+  logic  [                       $clog2(NUM_SET)-1:0] allocateWrite_setIdx_st1;
 
   // for cacheHit_hold buffer
-  wire                                              cacheHit_hold_w_ready;
-  wire                                              cacheHit_hold_w_valid;
-  wire [                             NUM_WAY+1-1:0] cacheHit_hold_w_data;  // cacheHit_hold_data = [hit,waymask]
-  wire                                              cacheHit_hold_r_valid;
-  wire                                              cacheHit_hold_r_ready;
-  wire [                             NUM_WAY+1-1:0] cacheHit_hold_r_data;  // cacheHit_hold_data = [hit,waymask]
+  logic                                              cacheHit_hold_w_ready;
+  logic                                              cacheHit_hold_w_valid;
+  logic [                             NUM_WAY+1-1:0] cacheHit_hold_w_data;  // cacheHit_hold_data = [hit,waymask]
+  logic                                              cacheHit_hold_r_valid;
+  logic                                              cacheHit_hold_r_ready;
+  logic [                             NUM_WAY+1-1:0] cacheHit_hold_r_data;  // cacheHit_hold_data = [hit,waymask]
 
   // for lru_matrix
-  wire                                              replacement_set_is_full;
-  wire [                       $clog2(NUM_WAY)-1:0] replacement_waymask_st1_bin;
-  wire [                               NUM_WAY-1:0] replacement_waymask_st1_oh;
-  wire [                               NUM_SET-1:0] lru_update_entry;
-  reg  [                               NUM_SET-1:0] probeRead_valid_of_setIdx;
-  reg  [                               NUM_SET-1:0] allocateWrite_valid_of_setIdx;
-  wire [                       $clog2(NUM_WAY)-1:0] lru_update_index;
-  wire [               $clog2(NUM_WAY)*NUM_SET-1:0] lru_index_out;
+  logic                                              replacement_set_is_full;
+  logic [                       $clog2(NUM_WAY)-1:0] replacement_waymask_st1_bin;
+  logic [                               NUM_WAY-1:0] replacement_waymask_st1_oh;
+  logic [                               NUM_SET-1:0] lru_update_entry;
+  logic  [                               NUM_SET-1:0] probeRead_valid_of_setIdx;
+  logic  [                               NUM_SET-1:0] allocateWrite_valid_of_setIdx;
+  logic [                       $clog2(NUM_WAY)-1:0] lru_update_index;
+  logic [               $clog2(NUM_WAY)*NUM_SET-1:0] lru_index_out;
 
 
-  wire [                      TAG_BITS*NUM_WAY-1:0] tagBodyAccess_resp_data;
+  logic [                      TAG_BITS*NUM_WAY-1:0] tagBodyAccess_resp_data;
 
-  wire [              TAG_BITS+$clog2(NUM_SET)-1:0] tag_and_set;  //  [tag,set]
+  logic [              TAG_BITS+$clog2(NUM_SET)-1:0] tag_and_set;  //  [tag,set]
 
   // For InvOrFlu
-  wire                                              hasDirty_st0;
-  wire [                       $clog2(NUM_SET)-1:0] choosenDirty_setIdx_st0;
-  wire [                               NUM_SET-1:0] set_dirty;
-  wire [                       NUM_WAY*NUM_SET-1:0] way_dirty_after_valid;
-  wire [                               NUM_WAY-1:0] choosenDirty_set_valid;
-  wire [                       $clog2(NUM_WAY)-1:0] choosenDirty_waymask_st0;  //  onehot -> bin
-  wire [                              TAG_BITS-1:0] choosenDirty_tag_st1;
-  //wire  [NUM_SET-1:0]           set_dirty_oh;
-  wire                                              set_dirty_zero;
-  wire [                       $clog2(NUM_SET)-1:0] set_dirty_bin;
-  wire [                               NUM_WAY-1:0] choosenDirty_set_valid_oh;
-  wire [                       $clog2(NUM_WAY)-1:0] choosenDirty_set_valid_bin;
+  logic                                              hasDirty_st0;
+  logic [                       $clog2(NUM_SET)-1:0] choosenDirty_setIdx_st0;
+  logic [                               NUM_SET-1:0] set_dirty;
+  logic [                       NUM_WAY*NUM_SET-1:0] way_dirty_after_valid;
+  logic [                               NUM_WAY-1:0] choosenDirty_set_valid;
+  logic [                       $clog2(NUM_WAY)-1:0] choosenDirty_waymask_st0;  //  onehot -> bin
+  logic [                              TAG_BITS-1:0] choosenDirty_tag_st1;
+  //logic  [NUM_SET-1:0]           set_dirty_oh;
+  logic                                              set_dirty_zero;
+  logic [                       $clog2(NUM_SET)-1:0] set_dirty_bin;
+  logic [                               NUM_WAY-1:0] choosenDirty_set_valid_oh;
+  logic [                       $clog2(NUM_WAY)-1:0] choosenDirty_set_valid_bin;
 
-  wire [                       $clog2(NUM_SET)-1:0] flushChoosen_setIdx;
-  wire [                               NUM_WAY-1:0] flushChoosen_waymask;
-  wire [                       $clog2(NUM_WAY)-1:0] flushChoosen_waymask_bin;
+  logic [                       $clog2(NUM_SET)-1:0] flushChoosen_setIdx;
+  logic [                               NUM_WAY-1:0] flushChoosen_waymask;
+  logic [                       $clog2(NUM_WAY)-1:0] flushChoosen_waymask_bin;
 
 
   assign probeRead_fire     = probeRead_valid_i & probeRead_ready_o;
   assign allocateWrite_fire = allocateWrite_valid_i;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       probeRead_fire_q     <= 1'b0;
       allocateWrite_fire_q <= 1'b0;
@@ -188,7 +188,7 @@ module tag_access_top_v2 #(
   assign tagAccessRArb_out_valid                                       = tagAccessRArb_in_valid[tagAccessRArb_valid_bin];
   assign tagAccessRArb_out_setIdx                                      = tagAccessRArb_in_setIdx[$clog2(NUM_SET)*(tagAccessRArb_valid_bin+1)-1-:$clog2(NUM_SET)];
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       probeRead_setIdx_q <= 'b0;
     end else begin
@@ -196,7 +196,7 @@ module tag_access_top_v2 #(
     end
   end
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       allocateWrite_setIdx_st1 <= 'b0;
     end else if (allocateWrite_fire) begin
@@ -206,7 +206,7 @@ module tag_access_top_v2 #(
     end
   end
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       probeRead_setIdx_st1 <= 'b0;
     end else if (probeRead_fire) begin
@@ -232,7 +232,7 @@ module tag_access_top_v2 #(
   assign flushChoosen_setIdx               = flushChoosen_i[$clog2(NUM_SET)+NUM_WAY-1:NUM_WAY];
   assign flushChoosen_waymask              = flushChoosen_i[NUM_WAY-1:0];
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       way_dirty <= {(NUM_WAY * NUM_SET) {1'b0}};
     end else if (hit_st1_o && !(probeRead_fire_q && !coreReq_q_deq_fire_i) && probeIsWrite_st1_i) begin
@@ -251,7 +251,7 @@ module tag_access_top_v2 #(
   genvar i;
   generate
     for (i = 0; i < NUM_SET; i = i + 1) begin : lru_input_loop
-      always @(*) begin
+      always_comb begin
         if (probeRead_fire_q && i == probeRead_setIdx_st1 && hit_st1_o) begin
           probeRead_valid_of_setIdx[i]     = 1'b1;
           allocateWrite_valid_of_setIdx[i] = 1'b0;
@@ -267,9 +267,9 @@ module tag_access_top_v2 #(
   endgenerate
 
   // when not full, output PriorityEncoder(~io.validOfSet)))
-  wire [        NUM_WAY-1:0] way_nvalid    [0:NUM_SET-1];
-  wire [        NUM_WAY-1:0] way_nvalid_oh [0:NUM_SET-1];
-  wire [$clog2(NUM_WAY)-1:0] way_nvalid_bin[0:NUM_SET-1];
+  logic [        NUM_WAY-1:0] way_nvalid    [0:NUM_SET-1];
+  logic [        NUM_WAY-1:0] way_nvalid_oh [0:NUM_SET-1];
+  logic [$clog2(NUM_WAY)-1:0] way_nvalid_bin[0:NUM_SET-1];
 
   genvar n;
   generate
@@ -303,7 +303,7 @@ module tag_access_top_v2 #(
   assign tag_and_set                 = {tagBodyAccess_resp_data[TAG_BITS*(replacement_waymask_st1_bin+1)-1-:TAG_BITS], allocateWrite_setIdx_st1};
   assign addrReplacement_st1_o       = {tag_and_set, {(`KIANA_DCACHE_BLOCKOFFSETBITS + `KIANA_DCACHE_WORDOFFSETBITS) {1'b0}}};  // tag + setIdx + blockOffset + wordOffset
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       way_valid <= {(NUM_WAY * NUM_SET) {1'b0}};
     end else if (allocateWrite_fire_q && !replacement_set_is_full) begin
@@ -324,9 +324,9 @@ module tag_access_top_v2 #(
     end
   endgenerate
 
-  reg [$clog2(NUM_WAY)-1:0] choosenDirty_waymask_st1;
+  logic [$clog2(NUM_WAY)-1:0] choosenDirty_waymask_st1;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       choosenDirty_waymask_st1 <= 'd0;
     end else begin
@@ -458,27 +458,6 @@ module tag_access_top_v2 #(
       .oh (tagchecker_waymask),
       .bin(tagchecker_waymask_bin)
   );
-
-  /*
-  fixed_pri_arb #(
-    .ARB_WIDTH(NUM_SET)
-  )
-  U_fixed_pri_set_dirty
-  (
-    .req  (set_dirty         ),
-    .grant(set_dirty_oh      )
-  );
-
-  one2bin #(
-    .ONE_WIDTH(NUM_SET        ),
-    .BIN_WIDTH($clog2(NUM_SET))
-  )
-  U_one2bin_set_dirty
-  (
-    .oh(set_dirty_oh      ),
-    .bin(set_dirty_bin    )    
-  );
-  */
 
   lzc #(
       .WIDTH    (NUM_SET),

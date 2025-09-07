@@ -49,7 +49,7 @@ module dcache_wshr #(
   assign  pop_push_in_same_cycle = (pushReq_valid_i && pushReq_ready_o) && popReq_valid_i;
   assign  pushedIdx_o = pop_push_in_same_cycle ? popReq_bits_i : nextEntryIdx;
 
-  always@(posedge clk or negedge rst_n) begin
+  always_ff@(posedge clk or negedge rst_n) begin
     if(!rst_n) begin
       blockAddrEntries  <= 'b0;
       validEntries      <= 'b0;

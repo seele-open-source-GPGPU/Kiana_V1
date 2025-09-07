@@ -13,7 +13,7 @@ module gen_data_map_per_byte #(
   genvar i;
   generate
     for(i=0; i<DATA_NUM; i=i+1) begin:output_loop
-      always@(*) begin
+      always_comb begin
         if(&mask_i[4*(i+1)-1-:4]) begin //  1111
           data_o[DATA_WIDTH*(i+1)-1-:DATA_WIDTH] = data_i[DATA_WIDTH*(i+1)-1-:DATA_WIDTH];
         end else if(mask_i[4*(i+1)-1-:4]==4'b0001) begin  //  0001

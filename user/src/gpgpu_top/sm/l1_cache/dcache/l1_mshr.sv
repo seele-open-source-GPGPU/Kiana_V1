@@ -4,41 +4,41 @@
 import shared_mem::*;
 
 module l1_mshr (
-  input                                  clk                     ,
-  input                                  rst_n                   ,
-  input                                  probe_valid_i           ,
-  input  [`KIANA_BABITS-1:0]                   probe_blockaddr_i       ,
-  input                                  missreq_valid_i         ,
-  output                                 missreq_ready_o         ,
-  input  [`KIANA_BABITS-1:0]                   missreq_blockaddr_i     ,
-  input  [`KIANA_TIWIDTH-1:0]                  missreq_targetinfo_i    ,
-  input                                  missrsp_in_valid_i      ,
-  output                                 missrsp_in_ready_o      ,
-  input  [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] missrsp_in_instrid_i    ,
-  output                                 missrsp_out_valid_o     ,
-  output [`KIANA_BABITS-1:0]                   missrsp_out_blockaddr_o ,
-  output [`KIANA_TIWIDTH-1:0]                  missrsp_out_targetinfo_o,
-  output                                 empty_o                 ,
-  output                                 probe_status_o          ,
-  output [2:0]                           mshr_status_st0_o       ,
-  output [2:0]                           probe_out_mshr_status_o ,
-  output [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] probe_out_a_source_o    ,
-  input                                  stage1_ready_i          ,
-  input                                  stage2_ready_i          
+  input logic                                  clk                     ,
+  input logic                                  rst_n                   ,
+  input logic                                  probe_valid_i           ,
+  input logic  [`KIANA_BABITS-1:0]                   probe_blockaddr_i       ,
+  input logic                                  missreq_valid_i         ,
+  output logic                                 missreq_ready_o         ,
+  input logic  [`KIANA_BABITS-1:0]                   missreq_blockaddr_i     ,
+  input logic  [`KIANA_TIWIDTH-1:0]                  missreq_targetinfo_i    ,
+  input logic                                  missrsp_in_valid_i      ,
+  output logic                                 missrsp_in_ready_o      ,
+  input logic  [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] missrsp_in_instrid_i    ,
+  output logic                                 missrsp_out_valid_o     ,
+  output logic [`KIANA_BABITS-1:0]                   missrsp_out_blockaddr_o ,
+  output logic [`KIANA_TIWIDTH-1:0]                  missrsp_out_targetinfo_o,
+  output logic                                 empty_o                 ,
+  output logic                                 probe_status_o          ,
+  output logic [2:0]                           mshr_status_st0_o       ,
+  output logic [2:0]                           probe_out_mshr_status_o ,
+  output logic [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] probe_out_a_source_o    ,
+  input logic                                  stage1_ready_i          ,
+  input logic                                  stage2_ready_i          
 );
 
-  reg [`KIANA_BABITS*`KIANA_DCACHE_MSHRENTRY-1:0]                         blockaddr_access ;
+  logic [`KIANA_BABITS*`KIANA_DCACHE_MSHRENTRY-1:0]                         blockaddr_access ;
   //target info can be replaced with SRAM
-  reg [`KIANA_TIWIDTH*(`KIANA_DCACHE_MSHRENTRY*`KIANA_DCACHE_MSHRSUBENTRY)-1:0] targetinfo_access;  
-  reg [`KIANA_DCACHE_MSHRENTRY*`KIANA_DCACHE_MSHRSUBENTRY-1:0]            subentry_valid   ;
+  logic [`KIANA_TIWIDTH*(`KIANA_DCACHE_MSHRENTRY*`KIANA_DCACHE_MSHRSUBENTRY)-1:0] targetinfo_access;  
+  logic [`KIANA_DCACHE_MSHRENTRY*`KIANA_DCACHE_MSHRSUBENTRY-1:0]            subentry_valid   ;
 
-  wire [`KIANA_DCACHE_MSHRENTRY-1:0]         entry_valid              ; 
-  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] entry_matchmiss_rsp      ;
-  wire [`KIANA_DCACHE_MSHRENTRY-1:0]         entry_match_probe        ;
-  wire [`KIANA_DCACHE_MSHRENTRY-1:0]         entry_match_probe_reg    ;
-  wire [`KIANA_DCACHE_MSHRSUBENTRY-1:0]      subentry_selected        ;
-  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] entry_match_probe_bin    ;
-  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] entry_match_probe_bin_reg;
+  logic [`KIANA_DCACHE_MSHRENTRY-1:0]         entry_valid              ; 
+  logic [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] entry_matchmiss_rsp      ;
+  logic [`KIANA_DCACHE_MSHRENTRY-1:0]         entry_match_probe        ;
+  logic [`KIANA_DCACHE_MSHRENTRY-1:0]         entry_match_probe_reg    ;
+  logic [`KIANA_DCACHE_MSHRSUBENTRY-1:0]      subentry_selected        ;
+  logic [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] entry_match_probe_bin    ;
+  logic [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] entry_match_probe_bin_reg;
 
   genvar i;
   generate for(i=0;i<`KIANA_DCACHE_MSHRENTRY;i=i+1) begin: ENTRY_VALID
@@ -70,9 +70,9 @@ module l1_mshr (
   assign subentry_selected   = (entry_match_probe=='d0) ? 'd0 : subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*(entry_match_probe_bin+1)-1 -:`KIANA_DCACHE_MSHRSUBENTRY];
 
   //subentry status
-  wire                                    subentry_status_almfull;
-  wire                                    subentry_status_full   ;
-  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] subentry_status_next   ;
+  logic                                    subentry_status_almfull;
+  logic                                    subentry_status_full   ;
+  logic [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] subentry_status_next   ;
 
   get_entry_status_req #(
     .NUM_ENTRY (`KIANA_DCACHE_MSHRSUBENTRY)
@@ -85,9 +85,9 @@ module l1_mshr (
   );
 
   //entry status
-  wire                                 entry_status_almfull;
-  wire                                 entry_status_full   ;
-  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] entry_status_next   ;
+  logic                                 entry_status_almfull;
+  logic                                 entry_status_full   ;
+  logic [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] entry_status_next   ;
 
   get_entry_status_req #(
     .NUM_ENTRY (`KIANA_DCACHE_MSHRENTRY)
@@ -100,9 +100,9 @@ module l1_mshr (
   );
 
   //subentry status for rsp
-  wire [`KIANA_DCACHE_MSHRSUBENTRY-1:0]         subentry_status_rsp_valid_list ;
-  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] subentry_status_rsp_next2cancel;
-  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY):0]   subentry_status_rsp_used       ;
+  logic [`KIANA_DCACHE_MSHRSUBENTRY-1:0]         subentry_status_rsp_valid_list ;
+  logic [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] subentry_status_rsp_next2cancel;
+  logic [$clog2(`KIANA_DCACHE_MSHRSUBENTRY):0]   subentry_status_rsp_used       ;
 
   assign subentry_status_rsp_valid_list = subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*(entry_matchmiss_rsp+1)-1 -:`KIANA_DCACHE_MSHRSUBENTRY];
 
@@ -115,15 +115,15 @@ module l1_mshr (
     .used_o        (subentry_status_rsp_used       )
   );
 
-  // pipeline reg: mshr_st1
-  wire                                                      mshr_st1_enq_ready        ;
-  wire                                                      mshr_st1_enq_valid        ;
-  wire [`KIANA_DCACHE_MSHRENTRY+$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] mshr_st1_enq_bits         ;
-  wire                                                      mshr_st1_deq_valid        ;
-  wire                                                      mshr_st1_deq_ready        ;
-  wire [`KIANA_DCACHE_MSHRENTRY+$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] mshr_st1_deq_bits         ;
-  wire [`KIANA_DCACHE_MSHRENTRY-1:0]                              mshr_st1_entry_match_probe;
-  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0]                   mshr_st1_subentry_idx     ;
+  // pipeline logic: mshr_st1
+  logic                                                      mshr_st1_enq_ready        ;
+  logic                                                      mshr_st1_enq_valid        ;
+  logic [`KIANA_DCACHE_MSHRENTRY+$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] mshr_st1_enq_bits         ;
+  logic                                                      mshr_st1_deq_valid        ;
+  logic                                                      mshr_st1_deq_ready        ;
+  logic [`KIANA_DCACHE_MSHRENTRY+$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] mshr_st1_deq_bits         ;
+  logic [`KIANA_DCACHE_MSHRENTRY-1:0]                              mshr_st1_entry_match_probe;
+  logic [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0]                   mshr_st1_subentry_idx     ;
 
   assign mshr_st1_enq_valid = probe_valid_i                           ;
   assign mshr_st1_deq_ready = stage1_ready_i                          ;
@@ -155,21 +155,21 @@ module l1_mshr (
   // SECONDARY_AVAIL      : 010
   // SECONDARY_FULL       : 011
   // SECONDARY_FULL_RETURN: 100
-  reg [2:0] mshr_status_r  ;
-  reg [2:0] mshr_status_st1;
-  reg [2:0] mshr_status_st0;
+  logic [2:0] mshr_status_r  ;
+  logic [2:0] mshr_status_st1;
+  logic [2:0] mshr_status_st0;
 
-  wire secondary_miss_st1;
-  wire secondary_miss_st0;
-  wire primary_miss_st1  ;
-  wire primary_miss_st0  ;
+  logic secondary_miss_st1;
+  logic secondary_miss_st0;
+  logic primary_miss_st1  ;
+  logic primary_miss_st0  ;
 
   assign secondary_miss_st1 = |mshr_st1_entry_match_probe;
   assign secondary_miss_st0 = |entry_match_probe         ;
   assign primary_miss_st1   = !secondary_miss_st1        ;
   assign primary_miss_st0   = !secondary_miss_st0        ;
 
-  always@(posedge clk or negedge rst_n) begin
+  always_ff@(posedge clk or negedge rst_n) begin
     if(!rst_n) begin
       mshr_status_r <= 'd0;
     end
@@ -220,7 +220,7 @@ module l1_mshr (
     end
   end
 
-  always@(*) begin
+  always_comb begin
     if(primary_miss_st0) begin
       if(entry_status_full || (missreq_valid_i&&entry_status_almfull)) begin
         mshr_status_st0 = 3'b001;
@@ -240,7 +240,7 @@ module l1_mshr (
   end
   
   //mshr_status need extra operations?
-  always@(*) begin
+  always_comb begin
     if(secondary_miss_st1 && ((mshr_status_r==3'b000)||(mshr_status_r==3'b001)) && stage2_ready_i) begin
       if(subentry_status_full) begin
         mshr_status_st1 = 3'b011;
@@ -255,9 +255,9 @@ module l1_mshr (
   end
 
   // probe status
-  reg probe_status;
+  logic probe_status;
 
-  always@(posedge clk or negedge rst_n) begin
+  always_ff@(posedge clk or negedge rst_n) begin
     if(!rst_n) begin
       probe_status <= 'd0;
     end
@@ -282,9 +282,9 @@ module l1_mshr (
     end
   end
 
-  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0]    real_sram_addr_up    ;
-  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] real_sram_addr_down  ;
-  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0]    entry_match_probe_st1;
+  logic [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0]    real_sram_addr_up    ;
+  logic [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] real_sram_addr_down  ;
+  logic [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0]    entry_match_probe_st1;
 
   one2bin #(
     .ONE_WIDTH (`KIANA_DCACHE_MSHRENTRY        ),
@@ -302,7 +302,7 @@ module l1_mshr (
   genvar n,m;
   generate for(n=0;n<`KIANA_DCACHE_MSHRENTRY;n=n+1) begin: INFO_UP
     for(m=0;m<`KIANA_DCACHE_MSHRSUBENTRY;m=m+1) begin: INFO_DOWN
-      always@(posedge clk or negedge rst_n) begin
+      always_ff@(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
           targetinfo_access[`KIANA_TIWIDTH*(`KIANA_DCACHE_MSHRSUBENTRY*n+m+1)-1 -:`KIANA_TIWIDTH] <= 'd0;// targetinfo_access[n][m]
         end
@@ -322,7 +322,7 @@ module l1_mshr (
   //blockaddr_access
   genvar j;
   generate for(j=0;j<`KIANA_DCACHE_MSHRENTRY;j=j+1) begin: BLOCKADDR
-    always@(posedge clk or negedge rst_n) begin
+    always_ff@(posedge clk or negedge rst_n) begin
       if(!rst_n) begin
         blockaddr_access[`KIANA_BABITS*(j+1)-1:`KIANA_BABITS*j] <= 'd0;
       end
@@ -340,21 +340,21 @@ module l1_mshr (
 
   //output target_info and blockaddr
 
-  wire [`KIANA_TIWIDTH*`KIANA_DCACHE_MSHRSUBENTRY-1:0] missrsp_targetinfo_entry_st1;
-  wire [`KIANA_TIWIDTH-1:0]                      missrsp_targetinfo_st1      ;
-  wire [`KIANA_BABITS-1:0]                       missrsp_blockaddr_st1       ;
+  logic [`KIANA_TIWIDTH*`KIANA_DCACHE_MSHRSUBENTRY-1:0] missrsp_targetinfo_entry_st1;
+  logic [`KIANA_TIWIDTH-1:0]                      missrsp_targetinfo_st1      ;
+  logic [`KIANA_BABITS-1:0]                       missrsp_blockaddr_st1       ;
 
   //to make sure the last mshr main entry has cleaned up 
-  reg                                  missrsp_in_valid_st1        ;
-  reg [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0]  entry_matchmiss_rsp_st1     ;
+  logic                                  missrsp_in_valid_st1        ;
+  logic [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0]  entry_matchmiss_rsp_st1     ;
   
-  reg                                  missrsp_in_valid_st1_clean  ;
+  logic                                  missrsp_in_valid_st1_clean  ;
 
-  wire [`KIANA_DCACHE_MSHRSUBENTRY-1:0]         subentry_status_rsp_valid_list_st1        ;
-  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] subentry_status_rsp_next2cancel_st1       ;
-  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY):0]   subentry_status_rsp_used_st1              ;
-  wire [`KIANA_DCACHE_MSHRSUBENTRY-1:0]         subentry_status_rsp_valid_list_reverse_st1;
-  wire [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] subentry_status_rsp_now2cancel_st1        ;
+  logic [`KIANA_DCACHE_MSHRSUBENTRY-1:0]         subentry_status_rsp_valid_list_st1        ;
+  logic [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] subentry_status_rsp_next2cancel_st1       ;
+  logic [$clog2(`KIANA_DCACHE_MSHRSUBENTRY):0]   subentry_status_rsp_used_st1              ;
+  logic [`KIANA_DCACHE_MSHRSUBENTRY-1:0]         subentry_status_rsp_valid_list_reverse_st1;
+  logic [$clog2(`KIANA_DCACHE_MSHRSUBENTRY)-1:0] subentry_status_rsp_now2cancel_st1        ;
 
   assign subentry_status_rsp_valid_list_st1 = subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*(entry_matchmiss_rsp_st1+1)-1 -:`KIANA_DCACHE_MSHRSUBENTRY];
 
@@ -387,7 +387,7 @@ module l1_mshr (
   );
 
 
-  always@(posedge clk or negedge rst_n) begin
+  always_ff@(posedge clk or negedge rst_n) begin
     if(!rst_n) begin
       missrsp_in_valid_st1         <= 'd0;
       entry_matchmiss_rsp_st1      <= 'd0;
@@ -408,7 +408,7 @@ module l1_mshr (
   genvar x,y;
   generate for(x=0;x<`KIANA_DCACHE_MSHRENTRY;x=x+1) begin: VALID_UP
     for(y=0;y<`KIANA_DCACHE_MSHRSUBENTRY;y=y+1) begin: VALID_DOWN
-      always@(posedge clk or negedge rst_n) begin
+      always_ff@(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
           subentry_valid[`KIANA_DCACHE_MSHRSUBENTRY*x+y] <= 'd0;
         end

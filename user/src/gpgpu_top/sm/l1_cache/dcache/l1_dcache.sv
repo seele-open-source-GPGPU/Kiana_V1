@@ -4,43 +4,43 @@
 import d_cache::*;
 
 module l1_dcache (
-    input                                                                 clk,
-    input                                                                 rst_n,
+    input  logic                                                                clk,
+    input  logic                                                                rst_n,
     //coreReq
-    input                                                                 core_req_valid_i,
-    output                                                                core_req_ready_o,
-    input  [                                          `KIANA_WIDBITS-1:0] core_req_instrid_i,
-    input  [                                `KIANA_DCACHE_SETIDXBITS-1:0] core_req_setidx_i,
-    input  [                                   `KIANA_DCACHE_TAGBITS-1:0] core_req_tag_i,
-    input  [                                    `KIANA_DCACHE_NLANES-1:0] core_req_activemask_i,
-    input  [      `KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS-1:0] core_req_blockoffset_i,
-    input  [                 `KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD-1:0] core_req_wordoffset1h_i,
-    input  [                        `KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_req_data_i,
-    input  [                                                         2:0] core_req_opcode_i,
-    input  [                                                         3:0] core_req_param_i,
+    input  logic                                                                core_req_valid_i,
+    output logic                                                                core_req_ready_o,
+    input  logic [                                          `KIANA_WIDBITS-1:0] core_req_instrid_i,
+    input  logic [                                `KIANA_DCACHE_SETIDXBITS-1:0] core_req_setidx_i,
+    input  logic [                                   `KIANA_DCACHE_TAGBITS-1:0] core_req_tag_i,
+    input  logic [                                    `KIANA_DCACHE_NLANES-1:0] core_req_activemask_i,
+    input  logic [      `KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS-1:0] core_req_blockoffset_i,
+    input  logic [                 `KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD-1:0] core_req_wordoffset1h_i,
+    input  logic [                        `KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_req_data_i,
+    input  logic [                                                         2:0] core_req_opcode_i,
+    input  logic [                                                         3:0] core_req_param_i,
     //coreRsp
-    output                                                                core_rsp_valid_o,
-    input                                                                 core_rsp_ready_i,
-    output                                                                core_rsp_is_write_o,
-    output [                                          `KIANA_WIDBITS-1:0] core_rsp_instrid_o,
-    output [                        `KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_rsp_data_o,
-    output [                                    `KIANA_DCACHE_NLANES-1:0] core_rsp_activemask_o,
+    output logic                                                                core_rsp_valid_o,
+    input  logic                                                                core_rsp_ready_i,
+    output logic                                                                core_rsp_is_write_o,
+    output logic [                                          `KIANA_WIDBITS-1:0] core_rsp_instrid_o,
+    output logic [                        `KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_rsp_data_o,
+    output logic [                                    `KIANA_DCACHE_NLANES-1:0] core_rsp_activemask_o,
     //memRsp
-    input                                                                 mem_rsp_valid_i,
-    output                                                                mem_rsp_ready_o,
-    input  [                                                         2:0] mem_rsp_d_opcode_i,
-    input  [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] mem_rsp_d_source_i,
-    input  [                                             `KIANA_XLEN-1:0] mem_rsp_d_addr_i,
-    input  [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_rsp_d_data_i,
+    input  logic                                                                mem_rsp_valid_i,
+    output logic                                                                mem_rsp_ready_o,
+    input  logic [                                                         2:0] mem_rsp_d_opcode_i,
+    input  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] mem_rsp_d_source_i,
+    input  logic [                                             `KIANA_XLEN-1:0] mem_rsp_d_addr_i,
+    input  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_rsp_d_data_i,
     //memReq
-    output                                                                mem_req_valid_o,
-    input                                                                 mem_req_ready_i,
-    output [                                                         2:0] mem_req_a_opcode_o,
-    output [                                                         2:0] mem_req_a_param_o,
-    output [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] mem_req_a_source_o,
-    output [                                             `KIANA_XLEN-1:0] mem_req_a_addr_o,
-    output [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_req_a_data_o,
-    output [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] mem_req_a_mask_o
+    output logic                                                                mem_req_valid_o,
+    input  logic                                                                mem_req_ready_i,
+    output logic [                                                         2:0] mem_req_a_opcode_o,
+    output logic [                                                         2:0] mem_req_a_param_o,
+    output logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] mem_req_a_source_o,
+    output logic [                                             `KIANA_XLEN-1:0] mem_req_a_addr_o,
+    output logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_req_a_data_o,
+    output logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] mem_req_a_mask_o
 );
 
   localparam CORE_RSP_Q_ENTRIES = `KIANA_DCACHE_NLANES;
@@ -49,12 +49,12 @@ module l1_dcache (
   localparam WM_ENTRY_EQUAL = `KIANA_DCACHE_MSHRENTRY == `KIANA_DCACHE_WSHR_ENTRY;
 
   //Queue: coreReq_Q
-  wire                                                                                                                                                                                                                      core_req_enq_valid;
-  wire                                                                                                                                                                                                                      core_req_enq_ready;
-  wire                                                                                                                                                                                                                      core_req_deq_valid;
-  wire                                                                                                                                                                                                                      core_req_deq_ready;
-  wire [`KIANA_WIDBITS+`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS+`KIANA_DCACHE_NLANES+`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS+`KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD+`KIANA_DCACHE_NLANES*`KIANA_XLEN+6:0] core_req_enq_bits;
-  wire [`KIANA_WIDBITS+`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS+`KIANA_DCACHE_NLANES+`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS+`KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD+`KIANA_DCACHE_NLANES*`KIANA_XLEN+6:0] core_req_deq_bits;
+  logic                                                                                                                                                                                                                      core_req_enq_valid;
+  logic                                                                                                                                                                                                                      core_req_enq_ready;
+  logic                                                                                                                                                                                                                      core_req_deq_valid;
+  logic                                                                                                                                                                                                                      core_req_deq_ready;
+  logic [`KIANA_WIDBITS+`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS+`KIANA_DCACHE_NLANES+`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS+`KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD+`KIANA_DCACHE_NLANES*`KIANA_XLEN+6:0] core_req_enq_bits;
+  logic [`KIANA_WIDBITS+`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS+`KIANA_DCACHE_NLANES+`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS+`KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD+`KIANA_DCACHE_NLANES*`KIANA_XLEN+6:0] core_req_deq_bits;
 
   assign core_req_enq_bits = {core_req_instrid_i, core_req_setidx_i, core_req_tag_i, core_req_activemask_i, core_req_blockoffset_i, core_req_wordoffset1h_i, core_req_data_i, core_req_opcode_i, core_req_param_i};
 
@@ -73,15 +73,15 @@ module l1_dcache (
   );
 
   //Queue: coreReq_st1
-  wire [                                    `KIANA_WIDBITS-1:0] core_req_instrid_st1;
-  wire [                          `KIANA_DCACHE_SETIDXBITS-1:0] core_req_setidx_st1;
-  wire [                             `KIANA_DCACHE_TAGBITS-1:0] core_req_tag_st1;
-  wire [                              `KIANA_DCACHE_NLANES-1:0] core_req_activemask_st1;
-  wire [`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS-1:0] core_req_blockoffset_st1;
-  wire [           `KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD-1:0] core_req_wordoffset1h_st1;
-  wire [                  `KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_req_data_st1;
-  wire [                                                   2:0] core_req_opcode_st1;
-  wire [                                                   3:0] core_req_param_st1;
+  logic [                                    `KIANA_WIDBITS-1:0] core_req_instrid_st1;
+  logic [                          `KIANA_DCACHE_SETIDXBITS-1:0] core_req_setidx_st1;
+  logic [                             `KIANA_DCACHE_TAGBITS-1:0] core_req_tag_st1;
+  logic [                              `KIANA_DCACHE_NLANES-1:0] core_req_activemask_st1;
+  logic [`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS-1:0] core_req_blockoffset_st1;
+  logic [           `KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD-1:0] core_req_wordoffset1h_st1;
+  logic [                  `KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_req_data_st1;
+  logic [                                                   2:0] core_req_opcode_st1;
+  logic [                                                   3:0] core_req_param_st1;
 
   assign core_req_instrid_st1      = core_req_deq_bits[`KIANA_WIDBITS+`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS+`KIANA_DCACHE_NLANES+`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS+`KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD+`KIANA_DCACHE_NLANES*`KIANA_XLEN+6:`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS+`KIANA_DCACHE_NLANES+`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS+`KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD+`KIANA_DCACHE_NLANES*`KIANA_XLEN+7];
   assign core_req_setidx_st1       = core_req_deq_bits[`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS+`KIANA_DCACHE_NLANES+`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS+`KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD+`KIANA_DCACHE_NLANES*`KIANA_XLEN+6:`KIANA_DCACHE_TAGBITS+`KIANA_DCACHE_NLANES+`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS+`KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD+`KIANA_DCACHE_NLANES*`KIANA_XLEN+7];
@@ -94,30 +94,30 @@ module l1_dcache (
   assign core_req_param_st1 = core_req_deq_bits[3:0];
 
   //tag access
-  wire                                                    tag_probeRead_valid;
-  wire                                                    tag_probeRead_ready;
-  wire [                    `KIANA_DCACHE_SETIDXBITS-1:0] tag_probeRead_setIdx;
-  wire [                       `KIANA_DCACHE_TAGBITS-1:0] tag_tagFromCore_st1;
-  wire                                                    tag_probeIsWrite_st1;
-  wire                                                    tag_coreReq_q_deq_fire;
-  wire                                                    tag_hit_st1;
-  wire [                         `KIANA_DCACHE_NWAYS-1:0] tag_waymaskHit_st1;
-  wire                                                    tag_allocateWrite_valid;
-  wire [                    `KIANA_DCACHE_SETIDXBITS-1:0] tag_allocateWrite_setIdx;
-  wire [                       `KIANA_DCACHE_TAGBITS-1:0] tag_allocateWriteData_st1;
-  wire                                                    tag_mem_req_fire;
-  wire                                                    tag_allocateWriteTagSRAMWValid_st1;
-  wire                                                    tag_needReplace;
-  wire [                         `KIANA_DCACHE_NWAYS-1:0] tag_waymaskReplacement_st1;
-  wire [                                 `KIANA_XLEN-1:0] tag_addrReplacement_st1;
-  wire                                                    tag_hasDirty_st0;
-  wire [                    `KIANA_DCACHE_SETIDXBITS-1:0] tag_dirtySetIdx_st0;
-  wire [                 $clog2(`KIANA_DCACHE_NWAYS)-1:0] tag_dirtyWayMask_st0;
-  wire [                       `KIANA_DCACHE_TAGBITS-1:0] tag_dirtyTag_st1;
-  wire                                                    tag_flushChoosen_valid;
-  wire [`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_NWAYS-1:0] tag_flushChoosen;
-  wire                                                    tag_invalidateAll;
-  wire                                                    tag_tagready_st1;
+  logic                                                    tag_probeRead_valid;
+  logic                                                    tag_probeRead_ready;
+  logic [                    `KIANA_DCACHE_SETIDXBITS-1:0] tag_probeRead_setIdx;
+  logic [                       `KIANA_DCACHE_TAGBITS-1:0] tag_tagFromCore_st1;
+  logic                                                    tag_probeIsWrite_st1;
+  logic                                                    tag_coreReq_q_deq_fire;
+  logic                                                    tag_hit_st1;
+  logic [                         `KIANA_DCACHE_NWAYS-1:0] tag_waymaskHit_st1;
+  logic                                                    tag_allocateWrite_valid;
+  logic [                    `KIANA_DCACHE_SETIDXBITS-1:0] tag_allocateWrite_setIdx;
+  logic [                       `KIANA_DCACHE_TAGBITS-1:0] tag_allocateWriteData_st1;
+  logic                                                    tag_mem_req_fire;
+  logic                                                    tag_allocateWriteTagSRAMWValid_st1;
+  logic                                                    tag_needReplace;
+  logic [                         `KIANA_DCACHE_NWAYS-1:0] tag_waymaskReplacement_st1;
+  logic [                                 `KIANA_XLEN-1:0] tag_addrReplacement_st1;
+  logic                                                    tag_hasDirty_st0;
+  logic [                    `KIANA_DCACHE_SETIDXBITS-1:0] tag_dirtySetIdx_st0;
+  logic [                 $clog2(`KIANA_DCACHE_NWAYS)-1:0] tag_dirtyWayMask_st0;
+  logic [                       `KIANA_DCACHE_TAGBITS-1:0] tag_dirtyTag_st1;
+  logic                                                    tag_flushChoosen_valid;
+  logic [`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_NWAYS-1:0] tag_flushChoosen;
+  logic                                                    tag_invalidateAll;
+  logic                                                    tag_tagready_st1;
 
   tag_access_top_v2 #(
       .NUM_SET (`KIANA_DCACHE_NSETS),
@@ -153,25 +153,25 @@ module l1_dcache (
   );
 
   //mshr
-  wire                                       mshr_probe_valid;
-  wire [                  `KIANA_BABITS-1:0] mshr_probe_blockaddr;
-  wire                                       mshr_missreq_valid;
-  wire                                       mshr_missreq_ready;
-  wire [                  `KIANA_BABITS-1:0] mshr_missreq_blockaddr;
-  wire [                 `KIANA_TIWIDTH-1:0] mshr_missreq_targetinfo;
-  wire                                       mshr_missrsp_in_valid;
-  wire                                       mshr_missrsp_in_ready;
-  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] mshr_missrsp_in_instrid;
-  wire                                       mshr_missrsp_out_valid;
-  wire [                  `KIANA_BABITS-1:0] mshr_missrsp_out_blockaddr;
-  wire [                 `KIANA_TIWIDTH-1:0] mshr_missrsp_out_targetinfo;
-  wire                                       mshr_empty;
-  wire                                       mshr_probe_status;
-  wire [                                2:0] mshr_mshr_status_st0;
-  wire [                                2:0] mshr_probe_out_mshr_status;
-  wire [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] mshr_probe_out_a_source;
-  wire                                       mshr_stage1_ready;
-  wire                                       mshr_stage2_ready;
+  logic                                       mshr_probe_valid;
+  logic [                  `KIANA_BABITS-1:0] mshr_probe_blockaddr;
+  logic                                       mshr_missreq_valid;
+  logic                                       mshr_missreq_ready;
+  logic [                  `KIANA_BABITS-1:0] mshr_missreq_blockaddr;
+  logic [                 `KIANA_TIWIDTH-1:0] mshr_missreq_targetinfo;
+  logic                                       mshr_missrsp_in_valid;
+  logic                                       mshr_missrsp_in_ready;
+  logic [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] mshr_missrsp_in_instrid;
+  logic                                       mshr_missrsp_out_valid;
+  logic [                  `KIANA_BABITS-1:0] mshr_missrsp_out_blockaddr;
+  logic [                 `KIANA_TIWIDTH-1:0] mshr_missrsp_out_targetinfo;
+  logic                                       mshr_empty;
+  logic                                       mshr_probe_status;
+  logic [                                2:0] mshr_mshr_status_st0;
+  logic [                                2:0] mshr_probe_out_mshr_status;
+  logic [$clog2(`KIANA_DCACHE_MSHRENTRY)-1:0] mshr_probe_out_a_source;
+  logic                                       mshr_stage1_ready;
+  logic                                       mshr_stage2_ready;
 
   l1_mshr mshraccess (
       .clk                     (clk),
@@ -198,25 +198,25 @@ module l1_dcache (
   );
 
   //indicate read/write miss/hit
-  wire cache_hit_st1;
-  wire cache_miss_st1;
-  wire read_hit_st1;
-  wire read_miss_st1;
-  wire write_hit_st1;
-  wire write_miss_st1;
+  logic cache_hit_st1;
+  logic cache_miss_st1;
+  logic read_hit_st1;
+  logic read_miss_st1;
+  logic write_hit_st1;
+  logic write_miss_st1;
 
   //for handshake
-  reg  inflight_read_write_miss;
+  logic inflight_read_write_miss;
 
-  wire readmiss_same_addr;
-  wire proberead_allocatewrite_conf;
-  wire inflight_read_write_miss_w;
+  logic readmiss_same_addr;
+  logic proberead_allocatewrite_conf;
+  logic inflight_read_write_miss_w;
 
   //these handshake signals indicate: when the memRsp comes, whether the coreReq is blocked
-  wire core_req_st0_ready;
-  //wire core_req_st0_valid          ;
-  reg  core_req_st1_ready;
-  wire core_req_st1_valid;
+  logic core_req_st0_ready;
+  //logic core_req_st0_valid          ;
+  logic core_req_st1_ready;
+  logic core_req_st1_valid;
 
 
   //coreReq handshake signals
@@ -227,9 +227,9 @@ module l1_dcache (
   assign core_req_st0_ready = core_req_enq_ready && !proberead_allocatewrite_conf && !inflight_read_write_miss_w && !readmiss_same_addr && tag_probeRead_ready && (mshr_mshr_status_st0 != 3'b011) && (mshr_mshr_status_st0 != 3'b001);
 
   //secondary full return
-  reg secondary_full_return;
+  logic secondary_full_return;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       secondary_full_return <= 'd0;
     end else begin
@@ -238,23 +238,23 @@ module l1_dcache (
   end
 
   //control signals: st0
-  wire is_read_noen;
-  wire is_write_noen;
-  wire is_lr_noen;
-  wire is_sc_noen;
-  wire is_amo_noen;
-  wire is_flush_noen;
-  wire is_invalidate_noen;
-  wire is_wait_mshr_noen;
+  logic is_read_noen;
+  logic is_write_noen;
+  logic is_lr_noen;
+  logic is_sc_noen;
+  logic is_amo_noen;
+  logic is_flush_noen;
+  logic is_invalidate_noen;
+  logic is_wait_mshr_noen;
 
-  wire is_read_st0;
-  wire is_write_st0;
-  wire is_lr_st0;
-  wire is_sc_st0;
-  wire is_amo_st0;
-  wire is_flush_st0;
-  wire is_invalidate_st0;
-  wire is_wait_mshr_st0;
+  logic is_read_st0;
+  logic is_write_st0;
+  logic is_lr_st0;
+  logic is_sc_st0;
+  logic is_amo_st0;
+  logic is_flush_st0;
+  logic is_invalidate_st0;
+  logic is_wait_mshr_st0;
 
   dcache_control control_gen (
       .opcode       (core_req_opcode_i),
@@ -279,21 +279,21 @@ module l1_dcache (
   assign is_wait_mshr_st0  = (core_req_valid_i && core_req_ready_o) ? is_wait_mshr_noen : 'd0;
 
   //Queue: coreReqControl_st1_Q
-  wire       is_read_st1;
-  wire       is_write_st1;
-  wire       is_lr_st1;
-  wire       is_sc_st1;
-  wire       is_amo_st1;
-  wire       is_flush_st1;
-  wire       is_invalidate_st1;
-  wire       is_wait_mshr_st1;
+  logic       is_read_st1;
+  logic       is_write_st1;
+  logic       is_lr_st1;
+  logic       is_sc_st1;
+  logic       is_amo_st1;
+  logic       is_flush_st1;
+  logic       is_invalidate_st1;
+  logic       is_wait_mshr_st1;
 
-  wire       core_req_control_st1_enq_valid;
-  wire       core_req_control_st1_enq_ready;
-  wire [7:0] core_req_control_st1_enq_bits;
-  wire       core_req_control_st1_deq_valid;
-  wire       core_req_control_st1_deq_ready;
-  wire [7:0] core_req_control_st1_deq_bits;
+  logic       core_req_control_st1_enq_valid;
+  logic       core_req_control_st1_enq_ready;
+  logic [7:0] core_req_control_st1_enq_bits;
+  logic       core_req_control_st1_deq_valid;
+  logic       core_req_control_st1_deq_ready;
+  logic [7:0] core_req_control_st1_deq_bits;
 
   assign core_req_control_st1_enq_bits = {is_read_st0, is_write_st0, is_lr_st0, is_sc_st0, is_amo_st0, is_flush_st0, is_invalidate_st0, is_wait_mshr_st0};
 
@@ -326,10 +326,10 @@ module l1_dcache (
   assign core_req_control_st1_deq_fire  = core_req_control_st1_deq_valid && core_req_control_st1_deq_ready;
 
   //RegNext(inject_tag_probe), after inflightReadWriteMiss come back, use it;
-  reg inject_tag_probe_reg;
-  reg core_req_control_st1_deq_fire_reg;
+  logic inject_tag_probe_reg;
+  logic core_req_control_st1_deq_fire_reg;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       core_req_control_st1_deq_fire_reg <= 'd0;
     end else begin
@@ -346,12 +346,12 @@ module l1_dcache (
   assign write_miss_st1 = cache_miss_st1 && is_write_st1 && core_req_control_st1_deq_fire;
 
   //Queue: coreRsp_st2_valid_from_coreReq_Reg
-  wire core_rsp_from_core_st2_enq_valid;
-  wire core_rsp_from_core_st2_enq_ready;
-  wire core_rsp_from_core_st2_enq_bits;
-  wire core_rsp_from_core_st2_deq_valid;
-  wire core_rsp_from_core_st2_deq_ready;
-  wire core_rsp_from_core_st2_deq_bits;
+  logic core_rsp_from_core_st2_enq_valid;
+  logic core_rsp_from_core_st2_enq_ready;
+  logic core_rsp_from_core_st2_enq_bits;
+  logic core_rsp_from_core_st2_deq_valid;
+  logic core_rsp_from_core_st2_deq_ready;
+  logic core_rsp_from_core_st2_deq_bits;
 
   stream_fifo_pipe_true #(
       .DATA_WIDTH(1),
@@ -368,12 +368,12 @@ module l1_dcache (
   );
 
   //Queue: core_rsp_st2
-  reg                                                                           core_rsp_st2_enq_valid;  //comb logic
-  wire                                                                          core_rsp_st2_enq_ready;
-  wire [`KIANA_WIDBITS+`KIANA_DCACHE_NLANES*`KIANA_XLEN+`KIANA_DCACHE_NLANES:0] core_rsp_st2_enq_bits;
-  wire                                                                          core_rsp_st2_deq_valid;
-  wire                                                                          core_rsp_st2_deq_ready;
-  wire [`KIANA_WIDBITS+`KIANA_DCACHE_NLANES*`KIANA_XLEN+`KIANA_DCACHE_NLANES:0] core_rsp_st2_deq_bits;
+  logic                                                                          core_rsp_st2_enq_valid;  //comb logic
+  logic                                                                          core_rsp_st2_enq_ready;
+  logic [`KIANA_WIDBITS+`KIANA_DCACHE_NLANES*`KIANA_XLEN+`KIANA_DCACHE_NLANES:0] core_rsp_st2_enq_bits;
+  logic                                                                          core_rsp_st2_deq_valid;
+  logic                                                                          core_rsp_st2_deq_ready;
+  logic [`KIANA_WIDBITS+`KIANA_DCACHE_NLANES*`KIANA_XLEN+`KIANA_DCACHE_NLANES:0] core_rsp_st2_deq_bits;
 
   stream_fifo_pipe_true #(
       .DATA_WIDTH(`KIANA_WIDBITS + `KIANA_DCACHE_NLANES * `KIANA_XLEN + `KIANA_DCACHE_NLANES + 1),
@@ -390,19 +390,19 @@ module l1_dcache (
   );
 
   //for coreRsp: st2 signals
-  wire                                                          core_rsp_st2_valid;
+  logic                                                          core_rsp_st2_valid;
 
-  reg  [                              `KIANA_DCACHE_NLANES-1:0] core_rsp_st2_activemask;
-  reg  [`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS-1:0] core_rsp_st2_blockoffset;
-  reg  [           `KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD-1:0] core_rsp_st2_wordoffset1h;
+  logic [                              `KIANA_DCACHE_NLANES-1:0] core_rsp_st2_activemask;
+  logic [`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS-1:0] core_rsp_st2_blockoffset;
+  logic [           `KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD-1:0] core_rsp_st2_wordoffset1h;
 
   //Queue: readHit_st2
-  wire                                                          read_hit_st2_enq_valid;
-  wire                                                          read_hit_st2_enq_ready;
-  wire                                                          read_hit_st2_enq_bits;
-  wire                                                          read_hit_st2_deq_valid;
-  wire                                                          read_hit_st2_deq_ready;
-  wire                                                          read_hit_st2_deq_bits;
+  logic                                                          read_hit_st2_enq_valid;
+  logic                                                          read_hit_st2_enq_ready;
+  logic                                                          read_hit_st2_enq_bits;
+  logic                                                          read_hit_st2_deq_valid;
+  logic                                                          read_hit_st2_deq_ready;
+  logic                                                          read_hit_st2_deq_bits;
 
   stream_fifo_pipe_true #(
       .DATA_WIDTH(1),
@@ -421,12 +421,12 @@ module l1_dcache (
   assign read_hit_st2_enq_bits = read_hit_st1;
 
   //Queue: coreRsp_Q
-  wire                                                                          core_rsp_q_enq_valid;
-  wire                                                                          core_rsp_q_enq_ready;
-  wire                                                                          core_rsp_q_deq_valid;
-  wire                                                                          core_rsp_q_deq_ready;
-  wire [`KIANA_WIDBITS+`KIANA_DCACHE_NLANES*`KIANA_XLEN+`KIANA_DCACHE_NLANES:0] core_rsp_q_enq_bits;
-  wire [`KIANA_WIDBITS+`KIANA_DCACHE_NLANES*`KIANA_XLEN+`KIANA_DCACHE_NLANES:0] core_rsp_q_deq_bits;
+  logic                                                                          core_rsp_q_enq_valid;
+  logic                                                                          core_rsp_q_enq_ready;
+  logic                                                                          core_rsp_q_deq_valid;
+  logic                                                                          core_rsp_q_deq_ready;
+  logic [`KIANA_WIDBITS+`KIANA_DCACHE_NLANES*`KIANA_XLEN+`KIANA_DCACHE_NLANES:0] core_rsp_q_enq_bits;
+  logic [`KIANA_WIDBITS+`KIANA_DCACHE_NLANES*`KIANA_XLEN+`KIANA_DCACHE_NLANES:0] core_rsp_q_deq_bits;
 
 `ifdef T28_MEM
   stream_fifo_dpsram_16X1060 #(
@@ -459,17 +459,17 @@ module l1_dcache (
 `endif
 
   //readHit_st2_valid is equal to read_hit_st2
-  wire read_hit_st2_valid;
+  logic read_hit_st2_valid;
 
   assign read_hit_st2_valid = read_hit_st2_deq_valid && read_hit_st2_deq_ready && read_hit_st2_deq_bits;
 
   //injectTagProbe: to hold a probeRead require
-  wire inject_tag_probe;
+  logic inject_tag_probe;
 
-  reg  inflight_read_write_miss_reg;  //RegNext(inflight_read_write_miss)
-  reg  mshr_mshr_status_st1;  //RegNext(mshr_mshr_status_st0)
+  logic inflight_read_write_miss_reg;  //RegNext(inflight_read_write_miss)
+  logic mshr_mshr_status_st1;  //RegNext(mshr_mshr_status_st0)
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       inflight_read_write_miss_reg <= 'd0;
       mshr_mshr_status_st1         <= 'd0;
@@ -488,10 +488,10 @@ module l1_dcache (
   assign readmiss_same_addr         = mshr_missreq_valid && (mshr_probe_blockaddr == mshr_missreq_blockaddr) && core_req_valid_i && core_req_deq_valid;
 
   //for invalidate and flush
-  wire core_req_invorflu_valid_st0;
-  wire core_req_invorflu_valid_st1;
-  wire core_req_inv_st0;
-  wire core_req_inv_st1;
+  logic core_req_invorflu_valid_st0;
+  logic core_req_invorflu_valid_st1;
+  logic core_req_inv_st0;
+  logic core_req_inv_st1;
 
   //core_req_invorflu_valid_st0/1, core_req_inv_st0/1: in the same stage?
   assign core_req_invorflu_valid_st0 = core_req_deq_valid && (core_req_opcode_st1 == 3'b011) && (core_req_param_st1 != 4'b0010);
@@ -502,10 +502,10 @@ module l1_dcache (
   assign core_req_st1_valid          = core_req_deq_valid && !(mshr_missrsp_out_valid && !secondary_full_return);
 
   //mshrMissTI: for mshrMissReq.targetInfo
-  wire [                                    `KIANA_WIDBITS-1:0] mshr_miss_ti_st1_instrid;
-  wire [                              `KIANA_DCACHE_NLANES-1:0] mshr_miss_ti_st1_activemask;
-  wire [`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS-1:0] mshr_miss_ti_st1_blockoffset;  //[0:`KIANA_DCACHE_NLANES-1];
-  wire [           `KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD-1:0] mshr_miss_ti_st1_wordoffset1h;  //[0:`KIANA_DCACHE_NLANES-1];
+  logic [                                    `KIANA_WIDBITS-1:0] mshr_miss_ti_st1_instrid;
+  logic [                              `KIANA_DCACHE_NLANES-1:0] mshr_miss_ti_st1_activemask;
+  logic [`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS-1:0] mshr_miss_ti_st1_blockoffset;  //[0:`KIANA_DCACHE_NLANES-1];
+  logic [           `KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD-1:0] mshr_miss_ti_st1_wordoffset1h;  //[0:`KIANA_DCACHE_NLANES-1];
 
   assign mshr_miss_ti_st1_instrid      = core_req_instrid_st1;
   assign mshr_miss_ti_st1_activemask   = core_req_activemask_st1;
@@ -513,49 +513,49 @@ module l1_dcache (
   assign mshr_miss_ti_st1_wordoffset1h = core_req_wordoffset1h_st1;
 
   //MemReqArb
-  wire                                                                memreq_arb_in0_valid;
-  wire                                                                memreq_arb_in0_ready;
-  wire                                                                memreq_arb_in0_has_corersp;
-  wire [                                          `KIANA_WIDBITS-1:0] memreq_arb_in0_corersp_instrid;
-  wire [                                                         2:0] memreq_arb_in0_a_opcode;
-  wire [                                                         2:0] memreq_arb_in0_a_param;
-  wire [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] memreq_arb_in0_a_source;
-  wire [                                             `KIANA_XLEN-1:0] memreq_arb_in0_a_addr;
-  wire [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] memreq_arb_in0_a_data;
-  wire [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] memreq_arb_in0_a_mask;
-  wire                                                                memreq_arb_in1_valid;
-  wire                                                                memreq_arb_in1_ready;
-  wire                                                                memreq_arb_in1_has_corersp;
-  wire [                                          `KIANA_WIDBITS-1:0] memreq_arb_in1_corersp_instrid;
-  wire [                                                         2:0] memreq_arb_in1_a_opcode;
-  wire [                                                         2:0] memreq_arb_in1_a_param;
-  wire [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] memreq_arb_in1_a_source;
-  wire [                                             `KIANA_XLEN-1:0] memreq_arb_in1_a_addr;
-  wire [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] memreq_arb_in1_a_data;
-  wire [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] memreq_arb_in1_a_mask;
-  wire                                                                memreq_arb_in2_valid;
-  wire                                                                memreq_arb_in2_ready;
-  wire                                                                memreq_arb_in2_has_corersp;
-  wire [                                          `KIANA_WIDBITS-1:0] memreq_arb_in2_corersp_instrid;
-  wire [                                                         2:0] memreq_arb_in2_a_opcode;
-  wire [                                                         2:0] memreq_arb_in2_a_param;
-  wire [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] memreq_arb_in2_a_source;
-  wire [                                             `KIANA_XLEN-1:0] memreq_arb_in2_a_addr;
-  wire [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] memreq_arb_in2_a_data;
-  wire [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] memreq_arb_in2_a_mask;
-  wire                                                                memreq_arb_out_valid;
-  wire                                                                memreq_arb_out_ready;
-  reg                                                                 memreq_arb_out_has_corersp;
-  reg  [                                          `KIANA_WIDBITS-1:0] memreq_arb_out_corersp_instrid;
-  reg  [                                                         2:0] memreq_arb_out_a_opcode;
-  reg  [                                                         2:0] memreq_arb_out_a_param;
-  reg  [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] memreq_arb_out_a_source;
-  reg  [                                             `KIANA_XLEN-1:0] memreq_arb_out_a_addr;
-  reg  [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] memreq_arb_out_a_data;
-  reg  [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] memreq_arb_out_a_mask;
+  logic                                                                memreq_arb_in0_valid;
+  logic                                                                memreq_arb_in0_ready;
+  logic                                                                memreq_arb_in0_has_corersp;
+  logic [                                          `KIANA_WIDBITS-1:0] memreq_arb_in0_corersp_instrid;
+  logic [                                                         2:0] memreq_arb_in0_a_opcode;
+  logic [                                                         2:0] memreq_arb_in0_a_param;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] memreq_arb_in0_a_source;
+  logic [                                             `KIANA_XLEN-1:0] memreq_arb_in0_a_addr;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] memreq_arb_in0_a_data;
+  logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] memreq_arb_in0_a_mask;
+  logic                                                                memreq_arb_in1_valid;
+  logic                                                                memreq_arb_in1_ready;
+  logic                                                                memreq_arb_in1_has_corersp;
+  logic [                                          `KIANA_WIDBITS-1:0] memreq_arb_in1_corersp_instrid;
+  logic [                                                         2:0] memreq_arb_in1_a_opcode;
+  logic [                                                         2:0] memreq_arb_in1_a_param;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] memreq_arb_in1_a_source;
+  logic [                                             `KIANA_XLEN-1:0] memreq_arb_in1_a_addr;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] memreq_arb_in1_a_data;
+  logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] memreq_arb_in1_a_mask;
+  logic                                                                memreq_arb_in2_valid;
+  logic                                                                memreq_arb_in2_ready;
+  logic                                                                memreq_arb_in2_has_corersp;
+  logic [                                          `KIANA_WIDBITS-1:0] memreq_arb_in2_corersp_instrid;
+  logic [                                                         2:0] memreq_arb_in2_a_opcode;
+  logic [                                                         2:0] memreq_arb_in2_a_param;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] memreq_arb_in2_a_source;
+  logic [                                             `KIANA_XLEN-1:0] memreq_arb_in2_a_addr;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] memreq_arb_in2_a_data;
+  logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] memreq_arb_in2_a_mask;
+  logic                                                                memreq_arb_out_valid;
+  logic                                                                memreq_arb_out_ready;
+  logic                                                                memreq_arb_out_has_corersp;
+  logic [                                          `KIANA_WIDBITS-1:0] memreq_arb_out_corersp_instrid;
+  logic [                                                         2:0] memreq_arb_out_a_opcode;
+  logic [                                                         2:0] memreq_arb_out_a_param;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] memreq_arb_out_a_source;
+  logic [                                             `KIANA_XLEN-1:0] memreq_arb_out_a_addr;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] memreq_arb_out_a_data;
+  logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] memreq_arb_out_a_mask;
 
-  wire [                                                         2:0] memreq_arb_valid_cat;
-  wire [                                                         2:0] memreq_arb_choose_bin;
+  logic [                                                         2:0] memreq_arb_valid_cat;
+  logic [                                                         2:0] memreq_arb_choose_bin;
 
   assign memreq_arb_valid_cat = {memreq_arb_in2_valid, memreq_arb_in1_valid, memreq_arb_in0_valid};
 
@@ -571,7 +571,7 @@ module l1_dcache (
   assign memreq_arb_in1_ready = memreq_arb_out_ready && !memreq_arb_in0_valid;
   assign memreq_arb_in2_ready = memreq_arb_out_ready && !memreq_arb_in0_valid && !memreq_arb_in1_valid;
 
-  always @(*) begin
+  always_comb begin
     if (memreq_arb_choose_bin[0]) begin
       memreq_arb_out_has_corersp     = memreq_arb_in0_has_corersp;
       memreq_arb_out_corersp_instrid = memreq_arb_in0_corersp_instrid;
@@ -603,41 +603,41 @@ module l1_dcache (
   end
 
   //missMemReq
-  wire                                                                miss_mem_req_has_corersp;
-  wire [                                          `KIANA_WIDBITS-1:0] miss_mem_req_corersp_instrid;
-  wire [                                                         2:0] miss_mem_req_a_opcode;
-  wire [                                                         2:0] miss_mem_req_a_param;
-  wire [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] miss_mem_req_a_source;
-  wire [                                             `KIANA_XLEN-1:0] miss_mem_req_a_addr;
-  wire [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] miss_mem_req_a_data;
-  wire [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] miss_mem_req_a_mask;
+  logic                                                                miss_mem_req_has_corersp;
+  logic [                                          `KIANA_WIDBITS-1:0] miss_mem_req_corersp_instrid;
+  logic [                                                         2:0] miss_mem_req_a_opcode;
+  logic [                                                         2:0] miss_mem_req_a_param;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] miss_mem_req_a_source;
+  logic [                                             `KIANA_XLEN-1:0] miss_mem_req_a_addr;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] miss_mem_req_a_data;
+  logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] miss_mem_req_a_mask;
 
-  wire                                                                read_miss_req_has_corersp;
-  wire [                                          `KIANA_WIDBITS-1:0] read_miss_req_corersp_instrid;
-  wire [                                                         2:0] read_miss_req_a_opcode;
-  wire [                                                         2:0] read_miss_req_a_param;
-  wire [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] read_miss_req_a_source;
-  wire [                                             `KIANA_XLEN-1:0] read_miss_req_a_addr;
-  wire [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] read_miss_req_a_data;
-  wire [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] read_miss_req_a_mask;
+  logic                                                                read_miss_req_has_corersp;
+  logic [                                          `KIANA_WIDBITS-1:0] read_miss_req_corersp_instrid;
+  logic [                                                         2:0] read_miss_req_a_opcode;
+  logic [                                                         2:0] read_miss_req_a_param;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] read_miss_req_a_source;
+  logic [                                             `KIANA_XLEN-1:0] read_miss_req_a_addr;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] read_miss_req_a_data;
+  logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] read_miss_req_a_mask;
 
-  wire                                                                write_miss_req_has_corersp;
-  wire [                                          `KIANA_WIDBITS-1:0] write_miss_req_corersp_instrid;
-  wire [                                                         2:0] write_miss_req_a_opcode;
-  wire [                                                         2:0] write_miss_req_a_param;
-  wire [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] write_miss_req_a_source;
-  wire [                                             `KIANA_XLEN-1:0] write_miss_req_a_addr;
-  wire [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] write_miss_req_a_data;
-  wire [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] write_miss_req_a_mask;
+  logic                                                                write_miss_req_has_corersp;
+  logic [                                          `KIANA_WIDBITS-1:0] write_miss_req_corersp_instrid;
+  logic [                                                         2:0] write_miss_req_a_opcode;
+  logic [                                                         2:0] write_miss_req_a_param;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] write_miss_req_a_source;
+  logic [                                             `KIANA_XLEN-1:0] write_miss_req_a_addr;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] write_miss_req_a_data;
+  logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] write_miss_req_a_mask;
 
   //LaneAddrOH: not use
-  //wire [`KIANA_DCACHE_BLOCKWORDS-1:0]      lane_addr_oh    [0:`KIANA_DCACHE_NLANES-1];
-  //wire [`KIANA_DCACHE_BLOCKOFFSETBITS-1:0] activelane_addr [0:`KIANA_DCACHE_NLANES-1];
-  //wire [`KIANA_DCACHE_NLANES-1:0]          activelane_mask                     ;
+  //logic [`KIANA_DCACHE_BLOCKWORDS-1:0]      lane_addr_oh    [0:`KIANA_DCACHE_NLANES-1];
+  //logic [`KIANA_DCACHE_BLOCKOFFSETBITS-1:0] activelane_addr [0:`KIANA_DCACHE_NLANES-1];
+  //logic [`KIANA_DCACHE_NLANES-1:0]          activelane_mask                     ;
 
 
   //genData: cannot handle double precision
-  wire [                        `KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_req_st1_data_map_byte;
+  logic [                        `KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_req_st1_data_map_byte;
 
   gen_data_map_per_byte #(
       .DATA_NUM  (`KIANA_DCACHE_NLANES),
@@ -649,10 +649,10 @@ module l1_dcache (
   );
 
   //remapData
-  wire [                              `KIANA_DCACHE_NLANES-1:0] core_req_st1_remap_activemask;
-  wire [`KIANA_DCACHE_BLOCKOFFSETBITS*`KIANA_DCACHE_NLANES-1:0] core_req_st1_remap_blockoffset;
-  wire [           `KIANA_BYTESOFWORD*`KIANA_DCACHE_NLANES-1:0] core_req_st1_remap_wordoffset1h;
-  wire [                  `KIANA_XLEN*`KIANA_DCACHE_NLANES-1:0] core_req_st1_data_map_sameword;
+  logic [                              `KIANA_DCACHE_NLANES-1:0] core_req_st1_remap_activemask;
+  logic [`KIANA_DCACHE_BLOCKOFFSETBITS*`KIANA_DCACHE_NLANES-1:0] core_req_st1_remap_blockoffset;
+  logic [           `KIANA_BYTESOFWORD*`KIANA_DCACHE_NLANES-1:0] core_req_st1_remap_wordoffset1h;
+  logic [                  `KIANA_XLEN*`KIANA_DCACHE_NLANES-1:0] core_req_st1_data_map_sameword;
 
   gen_data_map_same_word remap_data_per_word (
       .perLaneAddr_activeMask_i       (core_req_activemask_st1),
@@ -666,14 +666,14 @@ module l1_dcache (
   );
 
   //for data remap
-  wire [                   `KIANA_DCACHE_NLANES-1:0] laneblock_conv                    [0:`KIANA_DCACHE_BLOCKWORDS-1];
-  wire [                     `KIANA_BYTESOFWORD-1:0] wordoffset_conv                   [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [                   `KIANA_DCACHE_NLANES-1:0] laneblock_conv                    [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [                     `KIANA_BYTESOFWORD-1:0] wordoffset_conv                   [0:`KIANA_DCACHE_BLOCKWORDS-1];
 
-  wire [       `KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] write_miss_req_a_data_remap       [0:`KIANA_DCACHE_BLOCKWORDS-1];
-  wire [       `KIANA_XLEN*`KIANA_DCACHE_NLANES-1:0] write_miss_req_a_data_remap_bitcat[0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [       `KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] write_miss_req_a_data_remap       [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [       `KIANA_XLEN*`KIANA_DCACHE_NLANES-1:0] write_miss_req_a_data_remap_bitcat[0:`KIANA_DCACHE_BLOCKWORDS-1];
 
-  wire [`KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD-1:0] wordoffset_conv_remap             [0:`KIANA_DCACHE_BLOCKWORDS-1];
-  wire [`KIANA_BYTESOFWORD*`KIANA_DCACHE_NLANES-1:0] wordoffset_conv_remap_bitcat      [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [`KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD-1:0] wordoffset_conv_remap             [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [`KIANA_BYTESOFWORD*`KIANA_DCACHE_NLANES-1:0] wordoffset_conv_remap_bitcat      [0:`KIANA_DCACHE_BLOCKWORDS-1];
 
   //TODO: has a better plan? (reduce tree?)
   genvar j, k;
@@ -755,8 +755,8 @@ module l1_dcache (
   assign miss_mem_req_a_mask            = write_miss_st1 ? write_miss_req_a_mask : read_miss_req_a_mask;
 
   //getBankEN
-  wire [$clog2(`KIANA_DCACHE_NLANES)*`KIANA_DCACHE_BLOCKWORDS-1:0] get_banken_perBankBlockIdx;
-  wire [                             `KIANA_DCACHE_BLOCKWORDS-1:0] get_banken_perBankValid;
+  logic [$clog2(`KIANA_DCACHE_NLANES)*`KIANA_DCACHE_BLOCKWORDS-1:0] get_banken_perBankBlockIdx;
+  logic [                             `KIANA_DCACHE_BLOCKWORDS-1:0] get_banken_perBankValid;
 
   get_data_access_banken #(
       .NBANK(`KIANA_DCACHE_BLOCKWORDS),
@@ -769,7 +769,7 @@ module l1_dcache (
   );
 
   //for change getBankEN.perBankBlockIdx into vector
-  wire [$clog2(`KIANA_DCACHE_NLANES)-1:0] get_banken_perBankBlockIdx_v[0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [$clog2(`KIANA_DCACHE_NLANES)-1:0] get_banken_perBankBlockIdx_v[0:`KIANA_DCACHE_BLOCKWORDS-1];
 
   genvar e;
   generate
@@ -779,8 +779,8 @@ module l1_dcache (
   endgenerate
 
   //for change core_req_st1_remap into vector
-  wire [       `KIANA_XLEN-1:0] core_req_st1_data_map_sameword_v [0:`KIANA_DCACHE_NLANES-1];
-  wire [`KIANA_BYTESOFWORD-1:0] core_req_st1_remap_wordoffset1h_v[0:`KIANA_DCACHE_NLANES-1];
+  logic [       `KIANA_XLEN-1:0] core_req_st1_data_map_sameword_v [0:`KIANA_DCACHE_NLANES-1];
+  logic [`KIANA_BYTESOFWORD-1:0] core_req_st1_remap_wordoffset1h_v[0:`KIANA_DCACHE_NLANES-1];
 
   genvar f;
   generate
@@ -792,31 +792,31 @@ module l1_dcache (
 
   //kinds of data_access req:
   //data_access InvOrFlu req
-  wire [            SRAM_SETIDXBITS-1:0] data_invorflu_sram_rreq_setidx                           [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [            SRAM_SETIDXBITS-1:0] data_invorflu_sram_rreq_setidx                           [0:`KIANA_DCACHE_BLOCKWORDS-1];
 
   //data_access WriteHit req
-  wire [            SRAM_SETIDXBITS-1:0] data_writehit_sram_wreq_setidx                           [0:`KIANA_DCACHE_BLOCKWORDS-1];
-  wire [                `KIANA_XLEN-1:0] data_writehit_sram_wreq_data                             [0:`KIANA_DCACHE_BLOCKWORDS-1];
-  wire [         `KIANA_BYTESOFWORD-1:0] data_writehit_sram_wreq_waymask                          [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [            SRAM_SETIDXBITS-1:0] data_writehit_sram_wreq_setidx                           [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [                `KIANA_XLEN-1:0] data_writehit_sram_wreq_data                             [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [         `KIANA_BYTESOFWORD-1:0] data_writehit_sram_wreq_waymask                          [0:`KIANA_DCACHE_BLOCKWORDS-1];
 
   //data_access ReadHit req
-  wire [            SRAM_SETIDXBITS-1:0] data_readhit_sram_rreq_setidx                            [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [            SRAM_SETIDXBITS-1:0] data_readhit_sram_rreq_setidx                            [0:`KIANA_DCACHE_BLOCKWORDS-1];
 
   //data_access replaceread req
-  wire [            SRAM_SETIDXBITS-1:0] data_replaceread_sram_rreq_setidx                        [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [            SRAM_SETIDXBITS-1:0] data_replaceread_sram_rreq_setidx                        [0:`KIANA_DCACHE_BLOCKWORDS-1];
 
   //data_access missrsp req
-  wire [            SRAM_SETIDXBITS-1:0] data_missrsp_sram_wreq_setidx                            [0:`KIANA_DCACHE_BLOCKWORDS-1];
-  wire [                `KIANA_XLEN-1:0] data_missrsp_sram_wreq_data                              [0:`KIANA_DCACHE_BLOCKWORDS-1];
-  wire [         `KIANA_BYTESOFWORD-1:0] data_missrsp_sram_wreq_waymask                           [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [            SRAM_SETIDXBITS-1:0] data_missrsp_sram_wreq_setidx                            [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [                `KIANA_XLEN-1:0] data_missrsp_sram_wreq_data                              [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [         `KIANA_BYTESOFWORD-1:0] data_missrsp_sram_wreq_waymask                           [0:`KIANA_DCACHE_BLOCKWORDS-1];
 
   //for SRAM setidx cat
-  //wire [$clog2(`KIANA_DCACHE_NWAYS)-1:0] tag_dirtyWayMask_bin_st0      ;
-  wire [$clog2(`KIANA_DCACHE_NWAYS)-1:0] tag_waymaskHit_bin_st1;
-  wire [$clog2(`KIANA_DCACHE_NWAYS)-1:0] tag_waymaskReplacement_bin_st1;
-  reg  [$clog2(`KIANA_DCACHE_NWAYS)-1:0] tag_waymaskReplacement_bin_st2;  //for miss replace dirty
+  //logic [$clog2(`KIANA_DCACHE_NWAYS)-1:0] tag_dirtyWayMask_bin_st0      ;
+  logic [$clog2(`KIANA_DCACHE_NWAYS)-1:0] tag_waymaskHit_bin_st1;
+  logic [$clog2(`KIANA_DCACHE_NWAYS)-1:0] tag_waymaskReplacement_bin_st1;
+  logic [$clog2(`KIANA_DCACHE_NWAYS)-1:0] tag_waymaskReplacement_bin_st2;  //for miss replace dirty
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       tag_waymaskReplacement_bin_st2 <= 'd0;
     end else begin
@@ -824,7 +824,7 @@ module l1_dcache (
     end
   end
 
-  wire [`KIANA_DCACHE_NWAYS-1:0] tag_dirtyWayMask_oh_st0;
+  logic [`KIANA_DCACHE_NWAYS-1:0] tag_dirtyWayMask_oh_st0;
 
   assign tag_dirtyWayMask_oh_st0 = 1 << tag_dirtyWayMask_st0;
 
@@ -845,12 +845,12 @@ module l1_dcache (
   );
 
   //Queue: memRsp_Q
-  wire                                                                                                                 mem_rsp_q_enq_valid;
-  wire                                                                                                                 mem_rsp_q_enq_ready;
-  wire                                                                                                                 mem_rsp_q_deq_valid;
-  wire                                                                                                                 mem_rsp_q_deq_ready;
-  wire [5+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS+`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN:0] mem_rsp_q_enq_bits;
-  wire [5+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS+`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN:0] mem_rsp_q_deq_bits;
+  logic                                                                                                                 mem_rsp_q_enq_valid;
+  logic                                                                                                                 mem_rsp_q_enq_ready;
+  logic                                                                                                                 mem_rsp_q_deq_valid;
+  logic                                                                                                                 mem_rsp_q_deq_ready;
+  logic [5+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS+`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN:0] mem_rsp_q_enq_bits;
+  logic [5+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS+`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN:0] mem_rsp_q_deq_bits;
 
   assign mem_rsp_q_enq_bits = {mem_rsp_d_opcode_i, mem_rsp_d_source_i, mem_rsp_d_addr_i, mem_rsp_d_data_i};
 
@@ -868,10 +868,10 @@ module l1_dcache (
       .r_data_o (mem_rsp_q_deq_bits)
   );
 
-  wire [                                                          2:0] mem_rsp_d_opcode_st0;
-  wire [2+$clog2(`KIANA_DCACHE_WSHR_ENTRY)+`KIANA_DCACHE_SETIDXBITS:0] mem_rsp_d_source_st0;
-  wire [                                              `KIANA_XLEN-1:0] mem_rsp_d_addr_st0;
-  wire [                     `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_rsp_d_data_st0;
+  logic [                                                          2:0] mem_rsp_d_opcode_st0;
+  logic [2+$clog2(`KIANA_DCACHE_WSHR_ENTRY)+`KIANA_DCACHE_SETIDXBITS:0] mem_rsp_d_source_st0;
+  logic [                                              `KIANA_XLEN-1:0] mem_rsp_d_addr_st0;
+  logic [                     `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_rsp_d_data_st0;
 
   assign mem_rsp_d_opcode_st0 = mem_rsp_q_deq_bits[5+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS+`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-:3];
   assign mem_rsp_d_source_st0 = mem_rsp_q_deq_bits[2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS+`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-:3+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS];
@@ -879,24 +879,24 @@ module l1_dcache (
   assign mem_rsp_d_data_st0   = mem_rsp_q_deq_bits[`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0];
 
   //kinds of memRsp
-  wire mem_rsp_is_invorflu;
-  wire mem_rsp_is_write;
-  wire mem_rsp_is_read;
+  logic mem_rsp_is_invorflu;
+  logic mem_rsp_is_write;
+  logic mem_rsp_is_read;
 
   assign mem_rsp_is_invorflu = mem_rsp_d_opcode_st0 == 3'b010;  //hintAck
   assign mem_rsp_is_write    = mem_rsp_d_opcode_st0 == 3'b000;  //AccessAck
   assign mem_rsp_is_read     = mem_rsp_d_opcode_st0 == 3'b001;  //AccessAckData
 
-  //pipeline reg: memRsp_st1
-  reg [                                                         2:0] mem_rsp_d_opcode_st1;
-  reg [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] mem_rsp_d_source_st1;
-  reg [                                             `KIANA_XLEN-1:0] mem_rsp_d_addr_st1;
-  reg [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_rsp_d_data_st1;
+  //pipeline logic: memRsp_st1
+  logic [                                                         2:0] mem_rsp_d_opcode_st1;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] mem_rsp_d_source_st1;
+  logic [                                             `KIANA_XLEN-1:0] mem_rsp_d_addr_st1;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_rsp_d_data_st1;
 
-  //pipeline reg: memRsp_st2, for miss replace dirty
-  reg [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_rsp_d_data_st2;
+  //pipeline logic: memRsp_st2, for miss replace dirty
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_rsp_d_data_st2;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       mem_rsp_d_opcode_st1 <= 'd0;
       mem_rsp_d_source_st1 <= 'd0;
@@ -920,15 +920,15 @@ module l1_dcache (
   end
 
   //for flush
-  wire flush_stall;
-  wire invalidate_no_dirty;
-  wire flush_no_dirty;
+  logic flush_stall;
+  logic invalidate_no_dirty;
+  logic flush_no_dirty;
 
-  //reg invorflu_already_flush   ; //is useful?
-  reg  core_req_tag_hasdirty_st1;
-  reg  core_req_tag_hasdirty_st2;  //if InvOrFlu need 4 cycles to start a flush req
-  reg  waitfor_l2_flush;
-  reg  waitfor_l2_flush_st2;
+  //logic invorflu_already_flush   ; //is useful?
+  logic core_req_tag_hasdirty_st1;
+  logic core_req_tag_hasdirty_st2;  //if InvOrFlu need 4 cycles to start a flush req
+  logic waitfor_l2_flush;
+  logic waitfor_l2_flush_st2;
 
   //TODO: can't handle when there still exist infligh L2 rsp
   assign flush_stall         = is_flush_noen || is_invalidate_noen || waitfor_l2_flush;
@@ -936,7 +936,7 @@ module l1_dcache (
   assign invalidate_no_dirty = core_req_st1_valid && is_invalidate_st1 && !core_req_tag_hasdirty_st1;
   assign flush_no_dirty      = core_req_st1_valid && is_flush_st1 && !core_req_tag_hasdirty_st1;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       core_req_tag_hasdirty_st1 <= 'd0;
       core_req_tag_hasdirty_st2 <= 'd0;
@@ -946,7 +946,7 @@ module l1_dcache (
     end
   end
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       waitfor_l2_flush <= 'd0;
     end else begin
@@ -961,7 +961,7 @@ module l1_dcache (
     end
   end
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       waitfor_l2_flush_st2 <= 'd0;
     end else begin
@@ -977,7 +977,7 @@ module l1_dcache (
   end
 
   //inflight_read_write_miss: when writes, readmiss is not completely replied 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       inflight_read_write_miss <= 'd0;
     end else begin
@@ -993,14 +993,14 @@ module l1_dcache (
   end
 
   //wshr
-  wire                                                      wshr_pushReq_valid;
-  wire                                                      wshr_pushReq_ready;
-  wire [`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS-1:0] wshr_pushReq_blockAddr;
-  wire                                                      wshr_conflict;
-  wire [              $clog2(`KIANA_DCACHE_WSHR_ENTRY)-1:0] wshr_pushedIdx;
-  wire                                                      wshr_empty;
-  wire                                                      wshr_popReq_valid;
-  wire [              $clog2(`KIANA_DCACHE_WSHR_ENTRY)-1:0] wshr_popReq_bits;
+  logic                                                      wshr_pushReq_valid;
+  logic                                                      wshr_pushReq_ready;
+  logic [`KIANA_DCACHE_SETIDXBITS+`KIANA_DCACHE_TAGBITS-1:0] wshr_pushReq_blockAddr;
+  logic                                                      wshr_conflict;
+  logic [              $clog2(`KIANA_DCACHE_WSHR_ENTRY)-1:0] wshr_pushedIdx;
+  logic                                                      wshr_empty;
+  logic                                                      wshr_popReq_valid;
+  logic [              $clog2(`KIANA_DCACHE_WSHR_ENTRY)-1:0] wshr_popReq_bits;
 
   dcache_wshr #(
       .DEPTH(`KIANA_DCACHE_WSHR_ENTRY),
@@ -1019,7 +1019,7 @@ module l1_dcache (
   );
 
   //core_req_st1_ready
-  always @(*) begin
+  always_comb begin
     if (is_read_st1 || is_write_st1) begin
       if (tag_hit_st1) begin  //regular read/write hit
         core_req_st1_ready = core_rsp_st2_enq_ready && core_rsp_from_core_st2_enq_ready && !(mshr_missrsp_out_valid && !secondary_full_return);
@@ -1042,23 +1042,23 @@ module l1_dcache (
   end
 
   //waitMSHR, flush, invalidate can be passed to st2(coreRsp)
-  wire wait_mshr_core_rsp_st1;
-  wire flu_core_rsp_st1;
-  wire inv_core_rsp_st1;
+  logic wait_mshr_core_rsp_st1;
+  logic flu_core_rsp_st1;
+  logic inv_core_rsp_st1;
 
   assign wait_mshr_core_rsp_st1 = core_req_st1_valid && is_wait_mshr_st1 && mshr_empty;
   assign flu_core_rsp_st1       = core_req_st1_valid && is_flush_st1 && !core_req_tag_hasdirty_st1 && wshr_empty;
   assign inv_core_rsp_st1       = core_req_st1_valid && is_invalidate_st1 && !core_req_tag_hasdirty_st1 && mshr_empty && wshr_empty;
 
   //InvOrFlu can be passed to st2(memReq)
-  wire invorflu_memreq_valid_st1;
+  logic invorflu_memreq_valid_st1;
 
   assign invorflu_memreq_valid_st1 = core_req_st1_valid && (is_invalidate_st1 || is_flush_st1) && (core_req_tag_hasdirty_st1 || core_req_tag_hasdirty_st2);
   //assign invorflu_memreq_valid_st1 = core_req_st1_valid && (is_invalidate_st1||is_flush_st1) && core_req_tag_hasdirty_st1;
 
-  reg invorflu_memreq_valid_st2;  //RegNext(invorflu_memreq_valid_st1)
+  logic invorflu_memreq_valid_st2;  //RegNext(invorflu_memreq_valid_st1)
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       invorflu_memreq_valid_st2 <= 'd0;
     end else begin
@@ -1067,47 +1067,47 @@ module l1_dcache (
   end
 
   //InvOrFlu MemReq
-  wire                                                                invorflu_memreq_has_corersp;
-  wire [                                          `KIANA_WIDBITS-1:0] invorflu_memreq_corersp_instrid;
-  wire [                                                         2:0] invorflu_memreq_a_opcode;
-  wire [                                                         2:0] invorflu_memreq_a_param;
-  wire [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] invorflu_memreq_a_source;
-  wire [                                             `KIANA_XLEN-1:0] invorflu_memreq_a_addr;
-  wire [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] invorflu_memreq_a_data;
-  wire [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] invorflu_memreq_a_mask;
+  logic                                                                invorflu_memreq_has_corersp;
+  logic [                                          `KIANA_WIDBITS-1:0] invorflu_memreq_corersp_instrid;
+  logic [                                                         2:0] invorflu_memreq_a_opcode;
+  logic [                                                         2:0] invorflu_memreq_a_param;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] invorflu_memreq_a_source;
+  logic [                                             `KIANA_XLEN-1:0] invorflu_memreq_a_addr;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] invorflu_memreq_a_data;
+  logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] invorflu_memreq_a_mask;
 
   //L2_flush MemReq
-  wire                                                                l2flush_memreq_has_corersp;
-  wire [                                          `KIANA_WIDBITS-1:0] l2flush_memreq_corersp_instrid;
-  wire [                                                         2:0] l2flush_memreq_a_opcode;
-  wire [                                                         2:0] l2flush_memreq_a_param;
-  wire [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] l2flush_memreq_a_source;
-  wire [                                             `KIANA_XLEN-1:0] l2flush_memreq_a_addr;
-  wire [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] l2flush_memreq_a_data;
-  wire [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] l2flush_memreq_a_mask;
+  logic                                                                l2flush_memreq_has_corersp;
+  logic [                                          `KIANA_WIDBITS-1:0] l2flush_memreq_corersp_instrid;
+  logic [                                                         2:0] l2flush_memreq_a_opcode;
+  logic [                                                         2:0] l2flush_memreq_a_param;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] l2flush_memreq_a_source;
+  logic [                                             `KIANA_XLEN-1:0] l2flush_memreq_a_addr;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] l2flush_memreq_a_data;
+  logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] l2flush_memreq_a_mask;
 
   //dirtyReplace MemReq: st1
-  wire                                                                dirty_replace_memreq_has_corersp;
-  wire [                                          `KIANA_WIDBITS-1:0] dirty_replace_memreq_corersp_instrid;
-  wire [                                                         2:0] dirty_replace_memreq_a_opcode;
-  wire [                                                         2:0] dirty_replace_memreq_a_param;
-  wire [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] dirty_replace_memreq_a_source;
-  wire [                                             `KIANA_XLEN-1:0] dirty_replace_memreq_a_addr;
-  wire [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] dirty_replace_memreq_a_data;
-  wire [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] dirty_replace_memreq_a_mask;
+  logic                                                                dirty_replace_memreq_has_corersp;
+  logic [                                          `KIANA_WIDBITS-1:0] dirty_replace_memreq_corersp_instrid;
+  logic [                                                         2:0] dirty_replace_memreq_a_opcode;
+  logic [                                                         2:0] dirty_replace_memreq_a_param;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] dirty_replace_memreq_a_source;
+  logic [                                             `KIANA_XLEN-1:0] dirty_replace_memreq_a_addr;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] dirty_replace_memreq_a_data;
+  logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] dirty_replace_memreq_a_mask;
 
   //InvOrFlu, L2_flush, dirtyReplace MemReq connection
-  wire [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] data_access_rrsp;  //cat DataAccess read data
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] data_access_rrsp;  //cat DataAccess read data
 
-  reg  [                                `KIANA_DCACHE_SETIDXBITS-1:0] tag_dirtySetIdx_st1;  //RegNext(tag_dirtySetIdx_st0)
-  reg  [                                             `KIANA_XLEN-1:0] tag_addrReplacement_st2;  //RegNext(tag_addrReplacement_st1)
-  reg                                                                 tag_allocateWrite_valid_st1;  //RegNext(tag_allocateWrite_valid)
+  logic [                                `KIANA_DCACHE_SETIDXBITS-1:0] tag_dirtySetIdx_st1;  //RegNext(tag_dirtySetIdx_st0)
+  logic [                                             `KIANA_XLEN-1:0] tag_addrReplacement_st2;  //RegNext(tag_addrReplacement_st1)
+  logic                                                                tag_allocateWrite_valid_st1;  //RegNext(tag_allocateWrite_valid)
 
   //invorflu: addr_st2
-  //reg [`KIANA_XLEN-1:0] invorflu_memreq_a_addr_st2;
-  wire                                                                tag_allocate_write_ready;
+  //logic [`KIANA_XLEN-1:0] invorflu_memreq_a_addr_st2;
+  logic                                                                tag_allocate_write_ready;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       tag_dirtySetIdx_st1         <= 'd0;
       tag_addrReplacement_st2     <= 'd0;
@@ -1150,20 +1150,20 @@ module l1_dcache (
   assign dirty_replace_memreq_a_mask          = {(`KIANA_DCACHE_BLOCKWORDS * `KIANA_BYTESOFWORD) {1'b1}};
 
   //tagReqCtrl is for allocateWrite: indicate tag can be accessed(ready). tag is in use(valid)
-  reg  tag_req_ready_ctrl;
-  wire tag_req_valid_ctrl;
+  logic tag_req_ready_ctrl;
+  logic tag_req_valid_ctrl;
 
   //tag_allocate_write_ready: ready to write a new tag(for tag replace)
   //ensure when !needReplace, will not allocateWrite
-  //wire tag_allocate_write_ready    ;
-  wire tag_allocate_write_ready_mod;
-  wire tag_allocate_write_fire;
+  //logic tag_allocate_write_ready    ;
+  logic tag_allocate_write_ready_mod;
+  logic tag_allocate_write_fire;
 
   assign tag_req_valid_ctrl           = !tag_req_ready_ctrl;
   assign tag_allocate_write_ready_mod = tag_req_ready_ctrl || tag_allocate_write_ready;
   assign tag_allocate_write_fire      = tag_allocateWrite_valid && tag_allocate_write_ready_mod;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       tag_req_ready_ctrl <= 'd0;
     end else begin
@@ -1182,9 +1182,9 @@ module l1_dcache (
   assign mem_rsp_q_deq_ready = mem_rsp_is_write || mem_rsp_is_invorflu || (mem_rsp_is_read && tag_allocate_write_ready_mod && mshr_missrsp_in_ready);  //&& core_rsp_q_enq_ready); //TODO: why need enq.ready ?
 
   //tagReplaceStatus: indicate there is a tagaccess replacement require(need be replied)
-  reg tag_replace_status;
+  logic tag_replace_status;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       tag_replace_status <= 'd0;
     end else begin
@@ -1202,17 +1202,17 @@ module l1_dcache (
 
   //data_access enable
   //dataInvOrFluValid: can read SRAM for InvOrFlu
-  wire data_invorflu_valid;
+  logic data_invorflu_valid;
 
   assign data_invorflu_valid = (core_req_invorflu_valid_st0 || core_req_invorflu_valid_st1) && tag_hasDirty_st0;
 
   //dataReplaceReadValid: enable to read SRAM dirtylane
-  wire data_replaceread_valid;
+  logic data_replaceread_valid;
 
   assign data_replaceread_valid = tag_allocateWrite_valid_st1 && (tag_replace_status == 'd0) && tag_needReplace;
 
   //dataFillValid: enable to write a new cacheline
-  wire data_fill_valid;
+  logic data_fill_valid;
 
   //assign data_fill_valid = tag_allocateWrite_valid_st1 && (tag_replace_status=='d0) && !tag_needReplace;
   assign data_fill_valid              = tag_allocateWriteTagSRAMWValid_st1;
@@ -1222,10 +1222,10 @@ module l1_dcache (
   assign proberead_allocatewrite_conf = core_req_valid_i && tag_allocateWrite_valid_st1;
 
   // missRspTI: miss rsp, for coreRsp
-  wire [                                    `KIANA_WIDBITS-1:0] miss_rsp_ti_st1_instrid;
-  wire [                              `KIANA_DCACHE_NLANES-1:0] miss_rsp_ti_st1_activemask;
-  wire [`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS-1:0] miss_rsp_ti_st1_blockoffset;  //[0:`KIANA_DCACHE_NLANES-1];
-  wire [           `KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD-1:0] miss_rsp_ti_st1_wordoffset1h;  //[0:`KIANA_DCACHE_NLANES-1];
+  logic [                                    `KIANA_WIDBITS-1:0] miss_rsp_ti_st1_instrid;
+  logic [                              `KIANA_DCACHE_NLANES-1:0] miss_rsp_ti_st1_activemask;
+  logic [`KIANA_DCACHE_NLANES*`KIANA_DCACHE_BLOCKOFFSETBITS-1:0] miss_rsp_ti_st1_blockoffset;  //[0:`KIANA_DCACHE_NLANES-1];
+  logic [           `KIANA_DCACHE_NLANES*`KIANA_BYTESOFWORD-1:0] miss_rsp_ti_st1_wordoffset1h;  //[0:`KIANA_DCACHE_NLANES-1];
 
   assign miss_rsp_ti_st1_instrid            = mshr_missrsp_out_targetinfo[`KIANA_TIWIDTH-1-:`KIANA_WIDBITS];
   assign miss_rsp_ti_st1_activemask         = mshr_missrsp_out_targetinfo[`KIANA_TIWIDTH-`KIANA_WIDBITS-1-:`KIANA_DCACHE_NLANES];
@@ -1264,14 +1264,14 @@ module l1_dcache (
 
   //SRAM: DataAccess
   //connect SRAM_REQ
-  wire [`KIANA_DCACHE_SETIDXBITS-1:0] miss_rsp_setidx_st1;
-  reg  [`KIANA_DCACHE_SETIDXBITS-1:0] miss_rsp_setidx_st2;  //RegNext(miss_rsp_setidx_st1), for miss replace dirty
-  reg                                 data_access_w_req_mux;  //RegNext(mem_rsp_q_deq_valid && mem_rsp_is_read)
-                                                              //choose missrsp data for sram
+  logic [`KIANA_DCACHE_SETIDXBITS-1:0] miss_rsp_setidx_st1;
+  logic [`KIANA_DCACHE_SETIDXBITS-1:0] miss_rsp_setidx_st2;  //RegNext(miss_rsp_setidx_st1), for miss replace dirty
+  logic                                data_access_w_req_mux;  //RegNext(mem_rsp_q_deq_valid && mem_rsp_is_read)
+  //choose missrsp data for sram
 
   assign miss_rsp_setidx_st1 = mem_rsp_d_source_st1[`KIANA_DCACHE_SETIDXBITS-1:0];
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       data_access_w_req_mux <= 'd0;
       miss_rsp_setidx_st2   <= 'd0;
@@ -1281,18 +1281,18 @@ module l1_dcache (
     end
   end
 
-  wire [`KIANA_DCACHE_BLOCKWORDS-1:0] data_access_r_req_valid;
-  reg  [         SRAM_SETIDXBITS-1:0] data_access_r_req_setid  [0:`KIANA_DCACHE_BLOCKWORDS-1];  //comb logic
-  wire [             `KIANA_XLEN-1:0] data_access_r_resp_data  [0:`KIANA_DCACHE_BLOCKWORDS-1];
-  wire [`KIANA_DCACHE_BLOCKWORDS-1:0] data_access_w_req_valid;
-  wire [         SRAM_SETIDXBITS-1:0] data_access_w_req_setid  [0:`KIANA_DCACHE_BLOCKWORDS-1];
-  wire [      `KIANA_BYTESOFWORD-1:0] data_access_w_req_waymask[0:`KIANA_DCACHE_BLOCKWORDS-1];
-  wire [             `KIANA_XLEN-1:0] data_access_w_req_data   [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [`KIANA_DCACHE_BLOCKWORDS-1:0] data_access_r_req_valid;
+  logic [         SRAM_SETIDXBITS-1:0] data_access_r_req_setid  [0:`KIANA_DCACHE_BLOCKWORDS-1];  //comb logic
+  logic [             `KIANA_XLEN-1:0] data_access_r_resp_data  [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [`KIANA_DCACHE_BLOCKWORDS-1:0] data_access_w_req_valid;
+  logic [         SRAM_SETIDXBITS-1:0] data_access_w_req_setid  [0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [      `KIANA_BYTESOFWORD-1:0] data_access_w_req_waymask[0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [             `KIANA_XLEN-1:0] data_access_w_req_data   [0:`KIANA_DCACHE_BLOCKWORDS-1];
 
   //for miss replace dirty
-  reg                                 miss_replace_dirty_reg;
+  logic                                miss_replace_dirty_reg;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       miss_replace_dirty_reg <= 'd0;
     end else begin
@@ -1323,7 +1323,7 @@ module l1_dcache (
       assign data_access_w_req_waymask[i]         = (data_access_w_req_mux || miss_replace_dirty_reg) ? data_missrsp_sram_wreq_waymask[i] : data_writehit_sram_wreq_waymask[i];
       assign data_access_w_req_data[i]            = (data_access_w_req_mux || miss_replace_dirty_reg) ? data_missrsp_sram_wreq_data[i] : data_writehit_sram_wreq_data[i];
 
-      always @(*) begin  //SRAM read require
+      always_comb begin  //SRAM read require
         if (data_replaceread_valid) begin  //replace
           data_access_r_req_setid[i] = data_replaceread_sram_rreq_setidx[i];
         end else if (data_invorflu_valid) begin  //invorflu
@@ -1356,21 +1356,21 @@ module l1_dcache (
   endgenerate
 
   //coreRsp_st2 connection:
-  reg                                         core_rsp_st2_enq_is_write;
-  reg  [                  `KIANA_WIDBITS-1:0] core_rsp_st2_enq_instrid;
-  reg  [`KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_rsp_st2_enq_data;
-  reg  [            `KIANA_DCACHE_NLANES-1:0] core_rsp_st2_enq_activemask;
+  logic                                        core_rsp_st2_enq_is_write;
+  logic [                  `KIANA_WIDBITS-1:0] core_rsp_st2_enq_instrid;
+  logic [`KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_rsp_st2_enq_data;
+  logic [            `KIANA_DCACHE_NLANES-1:0] core_rsp_st2_enq_activemask;
 
-  wire                                        core_rsp_st2_deq_is_write;
-  wire [                  `KIANA_WIDBITS-1:0] core_rsp_st2_deq_instrid;
-  wire [`KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_rsp_st2_deq_data;
-  wire [            `KIANA_DCACHE_NLANES-1:0] core_rsp_st2_deq_activemask;
+  logic                                        core_rsp_st2_deq_is_write;
+  logic [                  `KIANA_WIDBITS-1:0] core_rsp_st2_deq_instrid;
+  logic [`KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_rsp_st2_deq_data;
+  logic [            `KIANA_DCACHE_NLANES-1:0] core_rsp_st2_deq_activemask;
 
-  wire                                        core_rsp_st2_valid_from_memreq;
+  logic                                        core_rsp_st2_valid_from_memreq;
 
   assign core_rsp_st2_deq_ready = core_rsp_q_enq_ready && !core_rsp_st2_valid_from_memreq;
 
-  always @(*) begin
+  always_comb begin
     if (cache_hit_st1 && ((core_req_deq_valid && core_req_deq_ready) || inject_tag_probe_reg) && core_rsp_from_core_st2_enq_ready) begin  //cachehit resp
       core_rsp_st2_enq_valid    = 1'b1;
       //core_rsp_st2_enq_data     = 'd0         ;//DontCare
@@ -1394,7 +1394,7 @@ module l1_dcache (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     if (mshr_missrsp_out_valid) begin
       core_rsp_st2_enq_data = mem_rsp_d_data_st1;
     end else if (read_hit_st2_valid) begin
@@ -1404,7 +1404,7 @@ module l1_dcache (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     if ((cache_hit_st1 && ((core_req_deq_valid && core_req_deq_ready) || inject_tag_probe_reg)) || wait_mshr_core_rsp_st1 || flu_core_rsp_st1 || inv_core_rsp_st1) begin  //comes from coreReq
       core_rsp_st2_enq_instrid    = core_req_instrid_st1;
       core_rsp_st2_enq_activemask = core_req_activemask_st1;
@@ -1425,7 +1425,7 @@ module l1_dcache (
   assign core_rsp_st2_deq_activemask = core_rsp_st2_deq_bits[`KIANA_DCACHE_NLANES-1:0];
 
   //coreRsp_st2_perLaneAddr connection: 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       core_rsp_st2_activemask   <= 'd0;
       core_rsp_st2_blockoffset  <= 'd0;
@@ -1448,9 +1448,9 @@ module l1_dcache (
   end
 
   //indicate where the coreRsp comes from
-  wire core_rsp_st2_valid_from_corereq;
-  reg  core_rsp_st2_valid_from_memrsp;
-  //wire core_rsp_st2_valid_from_memreq ;
+  logic core_rsp_st2_valid_from_corereq;
+  logic core_rsp_st2_valid_from_memrsp;
+  //logic core_rsp_st2_valid_from_memreq ;
 
   //handshake signals: readHit_st2
   assign read_hit_st2_enq_valid = core_req_st1_valid;
@@ -1460,11 +1460,11 @@ module l1_dcache (
   assign core_rsp_st2_valid     = core_rsp_st2_valid_from_corereq || core_rsp_st2_valid_from_memrsp || core_rsp_st2_valid_from_memreq;
 
   //MemOrder to CoreOrder
-  wire [`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] core_rsp_st2_data_memorder;
-  wire [    `KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_rsp_st2_data_coreorder;
+  logic [`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] core_rsp_st2_data_memorder;
+  logic [    `KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_rsp_st2_data_coreorder;
 
-  wire [                         `KIANA_XLEN-1:0] core_rsp_st2_data_memorder_forselect[0:`KIANA_DCACHE_BLOCKWORDS-1];
-  wire [       `KIANA_DCACHE_BLOCKOFFSETBITS-1:0] mem2core_blockoffset_choose         [    0:`KIANA_DCACHE_NLANES-1];
+  logic [                         `KIANA_XLEN-1:0] core_rsp_st2_data_memorder_forselect[0:`KIANA_DCACHE_BLOCKWORDS-1];
+  logic [       `KIANA_DCACHE_BLOCKOFFSETBITS-1:0] mem2core_blockoffset_choose         [    0:`KIANA_DCACHE_NLANES-1];
 
   assign core_rsp_st2_data_memorder = read_hit_st2_valid ? data_access_rrsp : core_rsp_st2_deq_data;
 
@@ -1484,15 +1484,15 @@ module l1_dcache (
   endgenerate
 
   //coreRspFromMemReq
-  wire                                        corersp_from_memreq_is_write;
-  wire [                  `KIANA_WIDBITS-1:0] corersp_from_memreq_instrid;
-  wire [            `KIANA_DCACHE_NLANES-1:0] corersp_from_memreq_activemask;
+  logic                                        corersp_from_memreq_is_write;
+  logic [                  `KIANA_WIDBITS-1:0] corersp_from_memreq_instrid;
+  logic [            `KIANA_DCACHE_NLANES-1:0] corersp_from_memreq_activemask;
 
   //coreRsp_Q connection
-  wire                                        core_rsp_q_enq_is_write;
-  wire [                  `KIANA_WIDBITS-1:0] core_rsp_q_enq_instrid;
-  wire [`KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_rsp_q_enq_data;
-  wire [            `KIANA_DCACHE_NLANES-1:0] core_rsp_q_enq_activemask;
+  logic                                        core_rsp_q_enq_is_write;
+  logic [                  `KIANA_WIDBITS-1:0] core_rsp_q_enq_instrid;
+  logic [`KIANA_DCACHE_NLANES*`KIANA_XLEN-1:0] core_rsp_q_enq_data;
+  logic [            `KIANA_DCACHE_NLANES-1:0] core_rsp_q_enq_activemask;
 
   assign core_rsp_q_enq_is_write   = core_rsp_st2_valid_from_memreq ? corersp_from_memreq_is_write : core_rsp_st2_deq_is_write;
   assign core_rsp_q_enq_instrid    = core_rsp_st2_valid_from_memreq ? corersp_from_memreq_instrid : core_rsp_st2_deq_instrid;
@@ -1506,50 +1506,13 @@ module l1_dcache (
 
   assign core_rsp_q_enq_bits       = {core_rsp_q_enq_is_write, core_rsp_q_enq_instrid, core_rsp_q_enq_data, core_rsp_q_enq_activemask};
 
-  //coreReqmemConflict_Reg: not use
-  //reg corereq_mem_conflict_reg;
-
-  //dirtyReplace_st2
-  /*
-  reg                                                    dirty_replace_st2_has_corersp    ;
-  reg [`KIANA_WIDBITS-1:0]                                     dirty_replace_st2_corersp_instrid;
-  reg [2:0]                                              dirty_replace_st2_a_opcode       ;
-  reg [2:0]                                              dirty_replace_st2_a_param        ;
-  reg [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] dirty_replace_st2_a_source       ;
-  reg [`KIANA_XLEN-1:0]                                        dirty_replace_st2_a_addr         ;
-  reg [`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0]                     dirty_replace_st2_a_data         ;
-  reg [`KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0]              dirty_replace_st2_a_mask         ;
-
-  always@(posedge clk or negedge rst_n) begin
-    if(!rst_n) begin
-      dirty_replace_st2_has_corersp     <= 'd0;
-      dirty_replace_st2_corersp_instrid <= 'd0;
-      dirty_replace_st2_a_opcode        <= 'd0;
-      dirty_replace_st2_a_param         <= 'd0;
-      dirty_replace_st2_a_source        <= 'd0;
-      dirty_replace_st2_a_addr          <= 'd0;
-      dirty_replace_st2_a_data          <= 'd0;
-      dirty_replace_st2_a_mask          <= 'd0;
-    end
-    else begin
-      dirty_replace_st2_has_corersp     <= dirty_replace_memreq_has_corersp    ;
-      dirty_replace_st2_corersp_instrid <= dirty_replace_memreq_corersp_instrid;
-      dirty_replace_st2_a_opcode        <= dirty_replace_memreq_a_opcode       ;
-      dirty_replace_st2_a_param         <= dirty_replace_memreq_a_param        ;
-      dirty_replace_st2_a_source        <= dirty_replace_memreq_a_source       ;
-      dirty_replace_st2_a_addr          <= dirty_replace_memreq_a_addr         ;
-      dirty_replace_st2_a_data          <= dirty_replace_memreq_a_data         ;
-      dirty_replace_st2_a_mask          <= dirty_replace_memreq_a_mask         ;
-    end
-  end
-  */
 
   //for flushL2:
-  wire flush_l2;  //when waitfor_l2_flush: enable to start a L2flush require
-  reg  flush_l2_reg;  //regEnable(flush_l2)
+  logic flush_l2;  //when waitfor_l2_flush: enable to start a L2flush require
+  logic flush_l2_reg;  //regEnable(flush_l2)
 
   assign flush_l2 = (!mem_rsp_is_invorflu && !mem_rsp_is_write && mem_rsp_q_deq_valid && mem_rsp_q_deq_ready) || (!flush_l2_reg && (invalidate_no_dirty || flush_no_dirty) && memreq_arb_in2_ready);
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       flush_l2_reg <= 'd0;
     end else if (mem_rsp_is_invorflu) begin
@@ -1560,15 +1523,15 @@ module l1_dcache (
   end
 
   //Queue: memReq_Q
-  wire                                                                                                                                                                            mem_req_q_enq_valid;
-  wire                                                                                                                                                                            mem_req_q_enq_ready;
-  wire                                                                                                                                                                            mem_req_q_deq_valid;
-  wire                                                                                                                                                                            mem_req_q_deq_ready;
-  wire [`KIANA_WIDBITS+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS+`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD+9:0] mem_req_q_enq_bits;
-  wire [`KIANA_WIDBITS+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS+`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD+9:0] mem_req_q_deq_bits;
+  logic                                                                                                                                                                            mem_req_q_enq_valid;
+  logic                                                                                                                                                                            mem_req_q_enq_ready;
+  logic                                                                                                                                                                            mem_req_q_deq_valid;
+  logic                                                                                                                                                                            mem_req_q_deq_ready;
+  logic [`KIANA_WIDBITS+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS+`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD+9:0] mem_req_q_enq_bits;
+  logic [`KIANA_WIDBITS+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS+`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD+9:0] mem_req_q_deq_bits;
 
-  wire [                                                                                                                                                                     4:0] mem_req_q_count;
-  wire                                                                                                                                                                            mem_req_q_alm_full;
+  logic [                                                                                                                                                                     4:0] mem_req_q_count;
+  logic                                                                                                                                                                            mem_req_q_alm_full;
 
   assign mem_req_q_alm_full   = (mem_req_q_count > 27);  //FIFO_DEPTH - 4
 
@@ -1593,14 +1556,14 @@ module l1_dcache (
       .fifo_count_o(mem_req_q_count)
   );
 
-  wire                                                                mem_req_q_deq_has_corersp;
-  wire [                                          `KIANA_WIDBITS-1:0] mem_req_q_deq_corersp_instrid;
-  wire [                                                         2:0] mem_req_q_deq_a_opcode;
-  wire [                                                         2:0] mem_req_q_deq_a_param;
-  wire [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] mem_req_q_deq_a_source;
-  wire [                                             `KIANA_XLEN-1:0] mem_req_q_deq_a_addr;
-  wire [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_req_q_deq_a_data;
-  wire [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] mem_req_q_deq_a_mask;
+  logic                                                                mem_req_q_deq_has_corersp;
+  logic [                                          `KIANA_WIDBITS-1:0] mem_req_q_deq_corersp_instrid;
+  logic [                                                         2:0] mem_req_q_deq_a_opcode;
+  logic [                                                         2:0] mem_req_q_deq_a_param;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] mem_req_q_deq_a_source;
+  logic [                                             `KIANA_XLEN-1:0] mem_req_q_deq_a_addr;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_req_q_deq_a_data;
+  logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] mem_req_q_deq_a_mask;
 
   assign mem_req_q_deq_has_corersp        = mem_req_q_deq_bits[`KIANA_WIDBITS+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS+`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD+9];
   assign mem_req_q_deq_corersp_instrid    = mem_req_q_deq_bits[`KIANA_WIDBITS+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS+`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN+`KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD+8-:`KIANA_WIDBITS];
@@ -1619,7 +1582,7 @@ module l1_dcache (
   assign core_rsp_st2_valid_from_corereq  = core_rsp_from_core_st2_deq_bits && core_rsp_from_core_st2_deq_valid && core_rsp_from_core_st2_deq_ready;
   assign core_rsp_st2_valid_from_memreq   = wshr_pushReq_valid && mem_req_q_deq_has_corersp && !core_rsp_st2_valid_from_memrsp;
 
-  always @(posedge clk or negedge rst_n) begin  //regEnable(mshr_missrsp_out_valid)
+  always_ff @(posedge clk or negedge rst_n) begin  //regEnable(mshr_missrsp_out_valid)
     if (!rst_n) begin
       core_rsp_st2_valid_from_memrsp <= 'd0;
     end else begin
@@ -1639,7 +1602,6 @@ module l1_dcache (
   assign memreq_arb_in0_a_data          = dirty_replace_memreq_a_data;
   assign memreq_arb_in0_a_mask          = dirty_replace_memreq_a_mask;
   //MemReqArb.in(1) = miss_mem_req
-  //assign memreq_arb_in1_valid           = core_req_st1_valid && core_req_deq_valid && core_req_deq_ready && ((write_miss_st1||read_miss_st1)&&mshr_probe_out_mshr_status=='d0) && !inject_tag_probe; //mshr_probe_out_mshr_status=='d0: only primary available
   assign memreq_arb_in1_valid           = core_req_st1_valid && core_req_deq_valid && core_req_deq_ready && (write_miss_st1 || (read_miss_st1 && mshr_probe_out_mshr_status == 'd0)) && !inject_tag_probe;
   assign memreq_arb_in1_has_corersp     = miss_mem_req_has_corersp;
   assign memreq_arb_in1_corersp_instrid = miss_mem_req_corersp_instrid;
@@ -1661,17 +1623,17 @@ module l1_dcache (
   assign memreq_arb_in2_a_mask          = invorflu_memreq_a_mask;
 
   //memReq is write/read
-  wire mem_req_is_write_st3;
-  wire mem_req_is_read_st3;
+  logic mem_req_is_write_st3;
+  logic mem_req_is_read_st3;
 
   assign mem_req_is_write_st3 = (mem_req_q_deq_a_opcode == `TLAOP_PUTFULL) || ((mem_req_q_deq_a_opcode == `TLAOP_PUTPART) && (mem_req_q_deq_a_param == 'd0));
   assign mem_req_is_read_st3  = (mem_req_q_deq_a_opcode == `TLAOP_GET) && (mem_req_q_deq_a_param == 'd0);
 
   //pushWshrValid: enable to push wshr
-  wire wshr_protect;
-  wire corersp_blocked_or_wshr_full;
-  wire wshr_pass;
-  wire push_wshr_valid;
+  logic wshr_protect;
+  logic corersp_blocked_or_wshr_full;
+  logic wshr_pass;
+  logic push_wshr_valid;
 
   assign wshr_protect                 = wshr_conflict && (mem_req_is_write_st3 || mem_req_is_read_st3) && mem_req_q_deq_valid;  // && mem_req_ready_i;
   assign corersp_blocked_or_wshr_full = ((!core_rsp_q_enq_ready && mem_req_q_deq_has_corersp) || !wshr_pushReq_ready) && mem_req_is_write_st3;
@@ -1679,7 +1641,7 @@ module l1_dcache (
   assign push_wshr_valid              = (wshr_pass || invorflu_memreq_valid_st1) && mem_req_q_deq_valid && mem_req_q_deq_ready && mem_req_is_write_st3;
 
   //wshr connection
-  wire [`KIANA_BABITS-1:0] push_req_ba;
+  logic [`KIANA_BABITS-1:0] push_req_ba;
 
   assign push_req_ba            = mem_req_q_deq_a_addr >> (`KIANA_XLEN - `KIANA_BABITS);
 
@@ -1692,18 +1654,18 @@ module l1_dcache (
   assign mem_req_q_deq_ready    = (wshr_pass || (invorflu_memreq_valid_st1 && wshr_pushReq_ready)) && mem_req_ready_i && !core_rsp_st2_valid_from_memrsp;
 
   //memReq_st3
-  reg  [                                                         2:0] mem_req_st3_a_opcode;
-  reg  [                                                         2:0] mem_req_st3_a_param;
-  reg  [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] mem_req_st3_a_source;
-  reg  [                                             `KIANA_XLEN-1:0] mem_req_st3_a_addr;
-  reg  [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_req_st3_a_data;
-  reg  [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] mem_req_st3_a_mask;
+  logic [                                                         2:0] mem_req_st3_a_opcode;
+  logic [                                                         2:0] mem_req_st3_a_param;
+  logic [2+$clog2(`KIANA_DCACHE_MSHRENTRY)+`KIANA_DCACHE_SETIDXBITS:0] mem_req_st3_a_source;
+  logic [                                             `KIANA_XLEN-1:0] mem_req_st3_a_addr;
+  logic [                    `KIANA_DCACHE_BLOCKWORDS*`KIANA_XLEN-1:0] mem_req_st3_a_data;
+  logic [             `KIANA_DCACHE_BLOCKWORDS*`KIANA_BYTESOFWORD-1:0] mem_req_st3_a_mask;
 
-  wire [                                `KIANA_DCACHE_SETIDXBITS-1:0] mem_req_setidx_st2;
+  logic [                                `KIANA_DCACHE_SETIDXBITS-1:0] mem_req_setidx_st2;
 
   assign mem_req_setidx_st2 = mem_req_q_deq_a_addr[`KIANA_XLEN-`KIANA_DCACHE_TAGBITS-1-:`KIANA_DCACHE_SETIDXBITS];
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       mem_req_st3_a_opcode <= 'd0;
       mem_req_st3_a_param  <= 'd0;
@@ -1727,7 +1689,7 @@ module l1_dcache (
     end
   end
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       mem_req_st3_a_source <= 'd0;
     end else begin
@@ -1742,12 +1704,12 @@ module l1_dcache (
   end
 
   //Queue: coreReqMask_Q
-  wire                            core_req_mask_q_enq_valid;
-  wire                            core_req_mask_q_enq_ready;
-  wire                            core_req_mask_q_deq_valid;
-  wire                            core_req_mask_q_deq_ready;
-  wire [`KIANA_DCACHE_NLANES-1:0] core_req_mask_q_enq_bits;
-  wire [`KIANA_DCACHE_NLANES-1:0] core_req_mask_q_deq_bits;
+  logic                            core_req_mask_q_enq_valid;
+  logic                            core_req_mask_q_enq_ready;
+  logic                            core_req_mask_q_deq_valid;
+  logic                            core_req_mask_q_deq_ready;
+  logic [`KIANA_DCACHE_NLANES-1:0] core_req_mask_q_enq_bits;
+  logic [`KIANA_DCACHE_NLANES-1:0] core_req_mask_q_deq_bits;
 
   stream_fifo #(
       .DATA_WIDTH(`KIANA_DCACHE_NLANES),
@@ -1768,9 +1730,9 @@ module l1_dcache (
   assign core_req_mask_q_deq_ready = mem_req_q_deq_ready && mem_req_q_deq_valid && core_rsp_q_enq_ready && !(wshr_conflict && (mem_req_is_write_st3 || mem_req_is_read_st3)) && !(mem_req_is_write_st3 && !push_wshr_valid);
   assign core_req_mask_q_enq_bits  = core_req_activemask_st1;
 
-  reg [`KIANA_DCACHE_NLANES-1:0] core_req_mask_q_deq_bits_reg;
+  logic [`KIANA_DCACHE_NLANES-1:0] core_req_mask_q_deq_bits_reg;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       core_req_mask_q_deq_bits_reg <= 'd0;
     end else if (core_req_mask_q_deq_valid && core_req_mask_q_deq_ready) begin
@@ -1786,9 +1748,9 @@ module l1_dcache (
   assign corersp_from_memreq_activemask = core_req_mask_q_deq_bits;  //(core_req_mask_q_deq_valid && core_req_mask_q_deq_ready) ? core_req_mask_q_deq_bits : core_req_mask_q_deq_bits_reg;
 
   //mem_req_valid
-  reg mem_req_valid;
+  logic mem_req_valid;
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       mem_req_valid <= 'd0;
     end else begin

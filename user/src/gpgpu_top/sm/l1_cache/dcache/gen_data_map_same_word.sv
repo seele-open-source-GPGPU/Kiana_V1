@@ -24,7 +24,7 @@ module gen_data_map_same_word(
   generate
     for (i=0; i<`KIANA_DCACHE_NLANES; i=i+1) begin:row_loop_1
       for (j=0; j<`KIANA_DCACHE_NLANES; j=j+1) begin:column_loop_1
-        always@(*) begin
+        always_comb begin
           if(perLaneAddr_activeMask_i[i] && perLaneAddr_activeMask_i[j]) begin
             blockOffsetMatch[`KIANA_DCACHE_NLANES*i+j]  = perLaneAddr_blockOffset_i[`KIANA_DCACHE_BLOCKOFFSETBITS*(i+1)-1-:`KIANA_DCACHE_BLOCKOFFSETBITS]==perLaneAddr_blockOffset_i[`KIANA_DCACHE_BLOCKOFFSETBITS*(j+1)-1-:`KIANA_DCACHE_BLOCKOFFSETBITS];
           end else begin

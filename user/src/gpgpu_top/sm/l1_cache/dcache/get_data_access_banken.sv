@@ -7,20 +7,20 @@ module get_data_access_banken #(
   parameter NBANK = `KIANA_DCACHE_BLOCKWORDS ,
   parameter NLANE = `KIANA_DCACHE_NLANES      
 )(
-  input       [$clog2(NBANK)*NLANE-1:0]     perLaneBlockIdx_i       ,
-  input       [NLANE-1:0]                   perLaneVaild_i          ,
-  output      [$clog2(NLANE)*NBANK-1:0]     perBankBlockIdx_o       ,  
-  output      [NBANK-1:0]                   perBankValid_o           
+  input    logic   [$clog2(NBANK)*NLANE-1:0]     perLaneBlockIdx_i       ,
+  input    logic   [NLANE-1:0]                   perLaneVaild_i          ,
+  output   logic   [$clog2(NLANE)*NBANK-1:0]     perBankBlockIdx_o       ,  
+  output   logic   [NBANK-1:0]                   perBankValid_o           
 );
 
   parameter DEPTGH_NBANK = $clog2(NBANK);
   parameter DEPTGH_NLANE = $clog2(NLANE);
 
-  wire  [NBANK*NLANE-1:0] perLaneBlockIdx_oh      ;
-  wire  [NBANK*NLANE-1:0] blockIdxMasked          ;
-  wire  [NLANE*NBANK-1:0] perBankReq_bin          ;
-  wire  [NLANE*NBANK-1:0] perBankReq_oh           ;
-  wire  [NLANE*NBANK-1:0] perBankReq_tmp          ;
+  logic  [NBANK*NLANE-1:0] perLaneBlockIdx_oh      ;
+  logic  [NBANK*NLANE-1:0] blockIdxMasked          ;
+  logic  [NLANE*NBANK-1:0] perBankReq_bin          ;
+  logic  [NLANE*NBANK-1:0] perBankReq_oh           ;
+  logic  [NLANE*NBANK-1:0] perBankReq_tmp          ;
 
   genvar i;
   generate
