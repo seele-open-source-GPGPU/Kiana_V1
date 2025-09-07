@@ -1,6 +1,6 @@
 `timescale 1ns / 1ns
 
-`include "../l1_cache.svh"
+`include "../../../define.svh"
 import d_cache::*;
 
 module l1_dcache (

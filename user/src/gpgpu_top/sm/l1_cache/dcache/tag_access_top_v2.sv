@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`include "../l1_cache.svh"
+`include "../../../define.svh"
 import d_cache::*;
 
 module tag_access_top_v2 #(

@@ -1,4 +1,4 @@
-`include "../l1_cache.svh"
+`include "../../../define.svh"
 import shared_mem::*;
 
 `timescale 1ns/1ps
