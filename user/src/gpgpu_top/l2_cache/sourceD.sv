@@ -19,66 +19,66 @@ module sourceD (
 
   input                                  req_from_mem_i  ,
   input                                  req_hit_i       ,
-  input   [`WAY_BITS-1:0]                req_way_i       ,
+  input   [`KIANA_WAY_BITS-1:0]                req_way_i       ,
   input                                  req_dirty_i     ,
   input                                  req_flush_i     ,
   input                                  req_last_flush_i,
-  input   [`SET_BITS-1:0]                req_set_i       ,
-  //input   [`L2C_BITS-1:0]                req_l2cidx_i    ,
-  input   [`OP_BITS-1:0]                 req_opcode_i    ,
-  input   [`SIZE_BITS-1:0]               req_size_i      ,
-  input   [`SOURCE_BITS-1:0]             req_source_i    ,
-  input   [`TAG_BITS-1:0]                req_tag_i       ,
-  input   [`OFFSET_BITS-1:0]             req_offset_i    ,
-  input   [`PUT_BITS-1:0]                req_put_i       ,
-  input   [`DATA_BITS-1:0]               req_data_i      ,
-  input   [`MASK_BITS-1:0]               req_mask_i      ,
+  input   [`KIANA_SET_BITS-1:0]                req_set_i       ,
+  //input   [`KIANA_L2C_BITS-1:0]                req_l2cidx_i    ,
+  input   [`KIANA_OP_BITS-1:0]                 req_opcode_i    ,
+  input   [`KIANA_SIZE_BITS-1:0]               req_size_i      ,
+  input   [`KIANA_SOURCE_BITS-1:0]             req_source_i    ,
+  input   [`KIANA_TAG_BITS-1:0]                req_tag_i       ,
+  input   [`KIANA_OFFSET_BITS-1:0]             req_offset_i    ,
+  input   [`KIANA_PUT_BITS-1:0]                req_put_i       ,
+  input   [`KIANA_DATA_BITS-1:0]               req_data_i      ,
+  input   [`KIANA_MASK_BITS-1:0]               req_mask_i      ,
   input   [2:0]                          req_param_i     ,
   input                                  req_valid_i     ,
   output                                 req_ready_o     ,
 
-  output  [`ADDRESS_BITS-1:0]            d_address_o     ,
-  output  [`OP_BITS-1:0]                 d_opcode_o      ,
-  output  [`SIZE_BITS-1:0]               d_size_o        ,
-  output  [`SOURCE_BITS-1:0]             d_source_o      ,
-  output  [`DATA_BITS-1:0]               d_data_o        ,
+  output  [`KIANA_ADDRESS_BITS-1:0]            d_address_o     ,
+  output  [`KIANA_OP_BITS-1:0]                 d_opcode_o      ,
+  output  [`KIANA_SIZE_BITS-1:0]               d_size_o        ,
+  output  [`KIANA_SOURCE_BITS-1:0]             d_source_o      ,
+  output  [`KIANA_DATA_BITS-1:0]               d_data_o        ,
   output  [2:0]                          d_param_o       ,
   output                                 d_valid_o       ,
   input                                  d_ready_i       ,
 
-  output  [`PUT_BITS-1:0]                pb_pop_index_o  ,
+  output  [`KIANA_PUT_BITS-1:0]                pb_pop_index_o  ,
   output                                 pb_pop_valid_o  ,
   //input                                  pb_pop_ready_i  ,
 
-  input   [`DATA_BITS-1:0]               pb_beat_data_i  ,
-  input   [`MASK_BITS-1:0]               pb_beat_mask_i  ,
+  input   [`KIANA_DATA_BITS-1:0]               pb_beat_data_i  ,
+  input   [`KIANA_MASK_BITS-1:0]               pb_beat_mask_i  ,
 
-  output  [`WAY_BITS-1:0]                bs_radr_way_o   ,
-  output  [`SET_BITS-1:0]                bs_radr_set_o   ,
-  output  [`INNER_MASK_BITS-1:0]         bs_radr_mask_o  ,
+  output  [`KIANA_WAY_BITS-1:0]                bs_radr_way_o   ,
+  output  [`KIANA_SET_BITS-1:0]                bs_radr_set_o   ,
+  output  [`KIANA_INNER_MASK_BITS-1:0]         bs_radr_mask_o  ,
   output                                 bs_radr_valid_o ,
   input                                  bs_radr_ready_i ,
 
-  input   [`L2CACHE_BEATBYTES*8-1:0]     bs_rdat_data_i  ,
+  input   [`KIANA_L2CACHE_BEATBYTES*8-1:0]     bs_rdat_data_i  ,
 
-  output  [`WAY_BITS-1:0]                bs_wadr_way_o   ,
-  output  [`SET_BITS-1:0]                bs_wadr_set_o   ,
-  output  [`INNER_MASK_BITS-1:0]         bs_wadr_mask_o  ,
+  output  [`KIANA_WAY_BITS-1:0]                bs_wadr_way_o   ,
+  output  [`KIANA_SET_BITS-1:0]                bs_wadr_set_o   ,
+  output  [`KIANA_INNER_MASK_BITS-1:0]         bs_wadr_mask_o  ,
   output                                 bs_wadr_valid_o ,
   input                                  bs_wadr_ready_i ,
 
-  output  [`L2CACHE_BEATBYTES*8-1:0]     bs_wdat_data_o  ,
+  output  [`KIANA_L2CACHE_BEATBYTES*8-1:0]     bs_wdat_data_o  ,
 
-  output  [`SET_BITS-1:0]                a_set_o         ,
-  //output  [`L2C_BITS-1:0]                a_l2cidx_o      ,
-  output  [`OP_BITS-1:0]                 a_opcode_o      ,
-  output  [`SIZE_BITS-1:0]               a_size_o        ,
-  output  [`SOURCE_BITS-1:0]             a_source_o      ,
-  output  [`TAG_BITS-1:0]                a_tag_o         ,
-  output  [`OFFSET_BITS-1:0]             a_offset_o      ,
-  output  [`PUT_BITS-1:0]                a_put_o         ,
-  output  [`DATA_BITS-1:0]               a_data_o        ,
-  output  [`MASK_BITS-1:0]               a_mask_o        ,
+  output  [`KIANA_SET_BITS-1:0]                a_set_o         ,
+  //output  [`KIANA_L2C_BITS-1:0]                a_l2cidx_o      ,
+  output  [`KIANA_OP_BITS-1:0]                 a_opcode_o      ,
+  output  [`KIANA_SIZE_BITS-1:0]               a_size_o        ,
+  output  [`KIANA_SOURCE_BITS-1:0]             a_source_o      ,
+  output  [`KIANA_TAG_BITS-1:0]                a_tag_o         ,
+  output  [`KIANA_OFFSET_BITS-1:0]             a_offset_o      ,
+  output  [`KIANA_PUT_BITS-1:0]                a_put_o         ,
+  output  [`KIANA_DATA_BITS-1:0]               a_data_o        ,
+  output  [`KIANA_MASK_BITS-1:0]               a_mask_o        ,
   output  [2:0]                          a_param_o       ,
   output                                 a_valid_o       ,
   input                                  a_ready_i       ,
@@ -102,63 +102,63 @@ module sourceD (
   reg                                    mshr_wait_reg    ;
   wire                                   about_to_not_busy;
 
-  reg     [`DATA_BITS-1:0]               pb_beat_reg_data;
-  reg     [`MASK_BITS-1:0]               pb_beat_reg_mask;
+  reg     [`KIANA_DATA_BITS-1:0]               pb_beat_reg_data;
+  reg     [`KIANA_MASK_BITS-1:0]               pb_beat_reg_mask;
 
   reg                                    s1_req_reg_from_mem  ;
   reg                                    s1_req_reg_hit       ;
-  reg     [`WAY_BITS-1:0]                s1_req_reg_way       ;
+  reg     [`KIANA_WAY_BITS-1:0]                s1_req_reg_way       ;
   reg                                    s1_req_reg_dirty     ;
   reg                                    s1_req_reg_flush     ;
   reg                                    s1_req_reg_last_flush;
-  reg     [`SET_BITS-1:0]                s1_req_reg_set       ;
-  //reg     [`L2C_BITS-1:0]                s1_req_reg_l2cidx    ;
-  reg     [`OP_BITS-1:0]                 s1_req_reg_opcode    ; 
-  reg     [`SIZE_BITS-1:0]               s1_req_reg_size      ;
-  reg     [`SOURCE_BITS-1:0]             s1_req_reg_source    ;
-  reg     [`TAG_BITS-1:0]                s1_req_reg_tag       ;
-  reg     [`OFFSET_BITS-1:0]             s1_req_reg_offset    ;
-  reg     [`PUT_BITS-1:0]                s1_req_reg_put       ;
-  reg     [`DATA_BITS-1:0]               s1_req_reg_data      ;
-  reg     [`MASK_BITS-1:0]               s1_req_reg_mask      ;
+  reg     [`KIANA_SET_BITS-1:0]                s1_req_reg_set       ;
+  //reg     [`KIANA_L2C_BITS-1:0]                s1_req_reg_l2cidx    ;
+  reg     [`KIANA_OP_BITS-1:0]                 s1_req_reg_opcode    ; 
+  reg     [`KIANA_SIZE_BITS-1:0]               s1_req_reg_size      ;
+  reg     [`KIANA_SOURCE_BITS-1:0]             s1_req_reg_source    ;
+  reg     [`KIANA_TAG_BITS-1:0]                s1_req_reg_tag       ;
+  reg     [`KIANA_OFFSET_BITS-1:0]             s1_req_reg_offset    ;
+  reg     [`KIANA_PUT_BITS-1:0]                s1_req_reg_put       ;
+  reg     [`KIANA_DATA_BITS-1:0]               s1_req_reg_data      ;
+  reg     [`KIANA_MASK_BITS-1:0]               s1_req_reg_mask      ;
   reg     [2:0]                          s1_req_reg_param     ;
 
-  wire    [`DATA_BITS-1:0]               pb_beat_data         ;
-  wire    [`MASK_BITS-1:0]               pb_beat_mask         ;
+  wire    [`KIANA_DATA_BITS-1:0]               pb_beat_data         ;
+  wire    [`KIANA_MASK_BITS-1:0]               pb_beat_mask         ;
   wire                                   s1_req_from_mem      ;
   wire                                   s1_req_hit           ;
-  wire    [`WAY_BITS-1:0]                s1_req_way           ;
+  wire    [`KIANA_WAY_BITS-1:0]                s1_req_way           ;
   wire                                   s1_req_dirty         ;
   wire                                   s1_req_flush         ;
   wire                                   s1_req_last_flush    ;
-  wire    [`SET_BITS-1:0]                s1_req_set           ;
-  //wire    [`L2C_BITS-1:0]                s1_req_l2cidx        ;
-  wire    [`OP_BITS-1:0]                 s1_req_opcode        ;
-  wire    [`SIZE_BITS-1:0]               s1_req_size          ;
-  wire    [`SOURCE_BITS-1:0]             s1_req_source        ;
-  wire    [`TAG_BITS-1:0]                s1_req_tag           ;
-  wire    [`OFFSET_BITS-1:0]             s1_req_offset        ;
-  wire    [`PUT_BITS-1:0]                s1_req_put           ;
-  wire    [`DATA_BITS-1:0]               s1_req_data          ;
-  wire    [`MASK_BITS-1:0]               s1_req_mask          ;
+  wire    [`KIANA_SET_BITS-1:0]                s1_req_set           ;
+  //wire    [`KIANA_L2C_BITS-1:0]                s1_req_l2cidx        ;
+  wire    [`KIANA_OP_BITS-1:0]                 s1_req_opcode        ;
+  wire    [`KIANA_SIZE_BITS-1:0]               s1_req_size          ;
+  wire    [`KIANA_SOURCE_BITS-1:0]             s1_req_source        ;
+  wire    [`KIANA_TAG_BITS-1:0]                s1_req_tag           ;
+  wire    [`KIANA_OFFSET_BITS-1:0]             s1_req_offset        ;
+  wire    [`KIANA_PUT_BITS-1:0]                s1_req_put           ;
+  wire    [`KIANA_DATA_BITS-1:0]               s1_req_data          ;
+  wire    [`KIANA_MASK_BITS-1:0]               s1_req_mask          ;
   wire    [2:0]                          s1_req_param         ;
 
   reg                                    s_final_req_from_mem  ; 
   reg                                    s_final_req_hit       ;
-  reg     [`WAY_BITS-1:0]                s_final_req_way       ;
+  reg     [`KIANA_WAY_BITS-1:0]                s_final_req_way       ;
   reg                                    s_final_req_dirty     ;
   reg                                    s_final_req_flush     ;
   reg                                    s_final_req_last_flush;
-  reg     [`SET_BITS-1:0]                s_final_req_set       ;
-  //reg     [`L2C_BITS-1:0]                s_final_req_l2cidx    ;
-  reg     [`OP_BITS-1:0]                 s_final_req_opcode    ;
-  reg     [`SIZE_BITS-1:0]               s_final_req_size      ;
-  reg     [`SOURCE_BITS-1:0]             s_final_req_source    ;
-  reg     [`TAG_BITS-1:0]                s_final_req_tag       ;
-  reg     [`OFFSET_BITS-1:0]             s_final_req_offset    ;
-  reg     [`PUT_BITS-1:0]                s_final_req_put       ;
-  reg     [`DATA_BITS-1:0]               s_final_req_data      ;
-  reg     [`MASK_BITS-1:0]               s_final_req_mask      ;
+  reg     [`KIANA_SET_BITS-1:0]                s_final_req_set       ;
+  //reg     [`KIANA_L2C_BITS-1:0]                s_final_req_l2cidx    ;
+  reg     [`KIANA_OP_BITS-1:0]                 s_final_req_opcode    ;
+  reg     [`KIANA_SIZE_BITS-1:0]               s_final_req_size      ;
+  reg     [`KIANA_SOURCE_BITS-1:0]             s_final_req_source    ;
+  reg     [`KIANA_TAG_BITS-1:0]                s_final_req_tag       ;
+  reg     [`KIANA_OFFSET_BITS-1:0]             s_final_req_offset    ;
+  reg     [`KIANA_PUT_BITS-1:0]                s_final_req_put       ;
+  reg     [`KIANA_DATA_BITS-1:0]               s_final_req_data      ;
+  reg     [`KIANA_MASK_BITS-1:0]               s_final_req_mask      ;
   reg     [2:0]                          s_final_req_param     ;
 
   wire                                   s1_need_w             ;

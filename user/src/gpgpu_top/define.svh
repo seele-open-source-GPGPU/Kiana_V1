@@ -1,6 +1,8 @@
 `ifndef _DEFINE
 `define _DEFINE 
 
+`define KIANA_NUM_SM 2 //the number of sm
+`define KIANA_NUM_CLUSTER 1 //the number of cluster
 `define KIANA_NUM_THREAD 4 //the number of thread
 `define KIANA_NUM_WARP 8 //the number of warp
 `define KIANA_XLEN 32   // 数据位宽（例如 RISC-V XLEN = 32 位）
@@ -10,6 +12,8 @@
 `define KIANA_BYTESOFWORD 4 //a word has 4 bytes
 `define KIANA_WORDLENGTH `KIANA_XLEN
 `define KIANA_LENGTH_REPLACE_TIME 10
+`define KIANA_NUM_SM_IN_CLUSTER `KIANA_NUM_SM/`KIANA_NUM_CLUSTER //the number of sm in a cluster
+`define KIANA_NUM_L2CACHE 1 //the number of l2cache in gpgpu
 
 package i_cache;
   `define KIANA_ICACHE_BLOCKWORDS 2    // 每个 Cache Block 含多少个 word
@@ -78,48 +82,69 @@ package shared_mem;
 endpackage
 
 package l2_cache;
-`define L2CACHE_NSETS 2
-`define L2CACHE_NWAYS 4
-`define L2CACHE_BLOCKWORDS `DCACHE_BLOCKWORDS
-`define L2CACHE_WRITEBYTES 1
-`define L2CACHE_MEMCYCLES 4
-`define L2CACHE_PORTFACTOR 2 
+`define KIANA_L2CACHE_NSETS 2
+`define KIANA_L2CACHE_NWAYS 4
+`define KIANA_L2CACHE_BLOCKWORDS `KIANA_DCACHE_BLOCKWORDS
+`define KIANA_L2CACHE_WRITEBYTES 1
+`define KIANA_L2CACHE_MEMCYCLES 4
+`define KIANA_L2CACHE_PORTFACTOR 2 
 
 //l2cache_define
-`define L2CACHE_LEVEL 2
-`define L2CACHE_BLOCKBYTES        (`L2CACHE_BLOCKWORDS * 4)
-`define L2CACHE_BEATBYTES         (`L2CACHE_BLOCKWORDS * 4)
-`define L2CACHE_BLOCKS            (`L2CACHE_NWAYS * `L2CACHE_NSETS )//4/2 =2
-`define L2CACHE_SIZEBYTES         (`L2CACHE_BLOCKS * `L2CACHE_BLOCKBYTES)
-`define L2CACHE_BLOCKBEATS        (`L2CACHE_BLOCKBYTES / `L2CACHE_BEATBYTES) // 8/8 = 1
-`define L2CACHE_NUM_WARP          `NUM_WARP
-`define L2CACHE_NUM_SM            `NUM_SM
-`define L2CACHE_NUM_SM_IN_CLUSTER `NUM_SM_IN_CLUSTER  //2
-`define L2CACHE_NUM_CLUSTER       `NUM_CLUSTER //1
-`define OP_BITS                   3
-`define PARAM_BITS                3   //3+lg2(4)+lg2(32）+lg2(2) + 0+1 = 3+2+5+1 +1 =12
-`define SOURCE_BITS               (3 + $clog2(`DCACHE_MSHRENTRY) + $clog2(`DCACHE_NSETS) + $clog2(`L2CACHE_NUM_SM_IN_CLUSTER) + $clog2(`L2CACHE_NUM_CLUSTER) + 1)
-`define	URCE_S_BITS				(3 + $clog2(`DCACHE_MSHRENTRY) + $clog2(`DCACHE_NSETS) + $clog2(`L2CACHE_NUM_SM_IN_CLUSTER) + $clog2(`NUM_CACHE_IN_SM) + 1)
-`define	URCE_L_BITS				(3 + $clog2(`DCACHE_MSHRENTRY) + $clog2(`DCACHE_NSETS) + $clog2(`L2CACHE_NUM_SM_IN_CLUSTER) + $clog2(`NUM_CACHE_IN_SM) + $clog2(`NUM_CLUSTER) + 1)
-`define DATA_BITS                 (`L2CACHE_BEATBYTES * 8)
-`define MASK_BITS                 (`L2CACHE_BEATBYTES / `L2CACHE_WRITEBYTES)
-`define SIZE_BITS                 ($clog2(`L2CACHE_BEATBYTES))
-`define MSHRS                     ((`L2CACHE_MEMCYCLES + `L2CACHE_BLOCKBEATS - 1) / `L2CACHE_BLOCKBEATS )
-`define SECONDARY                 (((`MSHRS > (`L2CACHE_MEMCYCLES - `MSHRS)) ? `MSHRS : (`L2CACHE_MEMCYCLES - `MSHRS)))
-`define PUTLISTS                  `L2CACHE_MEMCYCLES
-`define PUTBEATS                  ( (((2 * `L2CACHE_BLOCKBEATS) > `L2CACHE_MEMCYCLES) ? (2 * `L2CACHE_BLOCKBEATS) : `L2CACHE_MEMCYCLES))
-`define RELLISTS                  2   //2*1 = 16 > 4 ? 2* 1 ：4
-`define RELBEATS                  (`RELLISTS * `L2CACHE_BLOCKBEATS)
-`define ADDRESS_BITS              32
-`define WAY_BITS                  ($clog2(`L2CACHE_NWAYS)     )
-`define SET_BITS                  ($clog2(`L2CACHE_NSETS)     )
-`define OFFSET_BITS               ($clog2(`L2CACHE_BLOCKBYTES))
-`define L2C_BITS                  $clog2(`NUM_L2CACHE) //`define  L2C_BITS = $clog2(`NUM_L2CACHE)
-`define TAG_BITS                  (`ADDRESS_BITS - `SET_BITS - `OFFSET_BITS - `L2C_BITS)
-`define PUT_BITS                  ($clog2(`PUTLISTS))
-`define INNER_MASK_BITS           (`L2CACHE_BEATBYTES / `L2CACHE_WRITEBYTES)
-`define OUTER_MASK_BITS           (`L2CACHE_BEATBYTES / `L2CACHE_WRITEBYTES)
+`define KIANA_L2CACHE_LEVEL 2
+`define KIANA_L2CACHE_BLOCKBYTES        (`KIANA_L2CACHE_BLOCKWORDS * 4)
+`define KIANA_L2CACHE_BEATBYTES         (`KIANA_L2CACHE_BLOCKWORDS * 4)
+`define KIANA_L2CACHE_BLOCKS            (`KIANA_L2CACHE_NWAYS * `KIANA_L2CACHE_NSETS )//4/2 =2
+`define KIANA_L2CACHE_SIZEBYTES         (`KIANA_L2CACHE_BLOCKS * `KIANA_L2CACHE_BLOCKBYTES)
+`define KIANA_L2CACHE_BLOCKBEATS        (`KIANA_L2CACHE_BLOCKBYTES / `KIANA_L2CACHE_BEATBYTES) // 8/8 = 1
+`define KIANA_L2CACHE_NUM_WARP          `KIANA_NUM_WARP
+`define KIANA_L2CACHE_NUM_SM            `KIANA_NUM_SM
+`define KIANA_L2CACHE_NUM_SM_IN_CLUSTER `KIANA_NUM_SM_IN_CLUSTER  //2
+`define KIANA_L2CACHE_NUM_CLUSTER       `KIANA_NUM_CLUSTER //1
+`define KIANA_OP_BITS                   3
+`define KIANA_PARAM_BITS                3   //3+lg2(4)+lg2(32）+lg2(2) + 0+1 = 3+2+5+1 +1 =12
+`define KIANA_SOURCE_BITS               (3 + $clog2(`KIANA_DCACHE_MSHRENTRY) + $clog2(`KIANA_DCACHE_NSETS) + $clog2(`KIANA_L2CACHE_NUM_SM_IN_CLUSTER) + $clog2(`KIANA_L2CACHE_NUM_CLUSTER) + 1)
+`define KIANA_URCE_S_BITS				(3 + $clog2(`KIANA_DCACHE_MSHRENTRY) + $clog2(`KIANA_DCACHE_NSETS) + $clog2(`KIANA_L2CACHE_NUM_SM_IN_CLUSTER) + $clog2(`KIANA_NUM_CACHE_IN_SM) + 1)
+`define KIANA_URCE_L_BITS				(3 + $clog2(`KIANA_DCACHE_MSHRENTRY) + $clog2(`KIANA_DCACHE_NSETS) + $clog2(`KIANA_L2CACHE_NUM_SM_IN_CLUSTER) + $clog2(`KIANA_NUM_CACHE_IN_SM) + $clog2(`KIANA_NUM_CLUSTER) + 1)
+`define KIANA_DATA_BITS                 (`KIANA_L2CACHE_BEATBYTES * 8)
+`define KIANA_MASK_BITS                 (`KIANA_L2CACHE_BEATBYTES / `KIANA_L2CACHE_WRITEBYTES)
+`define KIANA_SIZE_BITS                 ($clog2(`KIANA_L2CACHE_BEATBYTES))
+`define KIANA_MSHRS                     ((`KIANA_L2CACHE_MEMCYCLES + `KIANA_L2CACHE_BLOCKBEATS - 1) / `KIANA_L2CACHE_BLOCKBEATS )
+`define KIANA_SECONDARY                 (((`KIANA_MSHRS > (`KIANA_L2CACHE_MEMCYCLES - `KIANA_MSHRS)) ? `KIANA_MSHRS : (`KIANA_L2CACHE_MEMCYCLES - `KIANA_MSHRS)))
+`define KIANA_PUTLISTS                  `KIANA_L2CACHE_MEMCYCLES
+`define KIANA_PUTBEATS                  ( (((2 * `KIANA_L2CACHE_BLOCKBEATS) > `KIANA_L2CACHE_MEMCYCLES) ? (2 * `KIANA_L2CACHE_BLOCKBEATS) : `KIANA_L2CACHE_MEMCYCLES))
+`define KIANA_RELLISTS                  2   //2*1 = 16 > 4 ? 2* 1 ：4
+`define KIANA_RELBEATS                  (`KIANA_RELLISTS * `KIANA_L2CACHE_BLOCKBEATS)
+`define KIANA_ADDRESS_BITS              32
+`define KIANA_WAY_BITS                  ($clog2(`KIANA_L2CACHE_NWAYS)     )
+`define KIANA_SET_BITS                  ($clog2(`KIANA_L2CACHE_NSETS)     )
+`define KIANA_OFFSET_BITS               ($clog2(`KIANA_L2CACHE_BLOCKBYTES))
+`define KIANA_L2C_BITS                  $clog2(`KIANA_NUM_L2CACHE) //`define  KIANA_L2C_BITS = $clog2(`KIANA_NUM_L2CACHE)
+`define KIANA_TAG_BITS                  (`KIANA_ADDRESS_BITS - `KIANA_SET_BITS - `KIANA_OFFSET_BITS - `KIANA_L2C_BITS)
+`define KIANA_PUT_BITS                  ($clog2(`KIANA_PUTLISTS))
+`define KIANA_INNER_MASK_BITS           (`KIANA_L2CACHE_BEATBYTES / `KIANA_L2CACHE_WRITEBYTES)
+`define KIANA_OUTER_MASK_BITS           (`KIANA_L2CACHE_BEATBYTES / `KIANA_L2CACHE_WRITEBYTES)
+`define KIANA_PUTLISTS                  `KIANA_L2CACHE_MEMCYCLES
 //tilelink interface opcode
+`define       PUTFULLDATA           3'd0         //                            => AccessAck
+`define       PUTPARTIALDATA        3'd1         //                            => AccessAck
+`define       ARITHMETICDATA        3'd2         //                            => AccessAckData
+`define       LOGICALDATA           3'd3         //                            => AccessAckData
+`define       GET                   3'd4         //                            => AccessAckData
+`define       HINT                  3'd5         //                            => HintAck
+`define       ACQUIREBLOCK          3'd6         //                            => Grant[Data]
+`define       ACQUIREPERM           3'd7         //                            => Grant[Data]
+`define       PROBE                 3'd6         //                            => ProbeAck[Data]
+`define       ACCESSACK             3'd0         //                   
+`define       ACCESSACKDATA         3'd1         //                   
+`define       HINTACK               3'd2         //                   
+`define       PROBEACK              3'd4         //               
+`define       PROBEACKDATA          3'd5         //               
+`define       RELEASE               3'd6         //                            => ReleaseAck
+`define       RELEASEDATA           3'd7         //                            => ReleaseAck
+`define       GRANT                 3'd4         //                            => GrantAck
+`define       GRANTDATA             3'd5         //                            => GrantAck
+`define       RELEASEACK            3'd6         //                    
+`define       GRANTACK              3'd0         //  
 endpackage
 
 `endif

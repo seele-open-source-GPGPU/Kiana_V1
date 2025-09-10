@@ -19,25 +19,25 @@ module sinkD (
   input                                       clk          ,
   input                                       rst_n        ,
 
-  input       [`OP_BITS-1:0]                  d_opcode_i   ,
-  input       [`SOURCE_BITS-1:0]              d_source_i   ,
-  input       [`DATA_BITS-1:0]                d_data_i     ,
+  input       [`KIANA_OP_BITS-1:0]                  d_opcode_i   ,
+  input       [`KIANA_SOURCE_BITS-1:0]              d_source_i   ,
+  input       [`KIANA_DATA_BITS-1:0]                d_data_i     ,
   input                                       d_valid_i    ,
   output                                      d_ready_o    ,
 
   //input       [`PUT_BITS-1:0]                 put_i        ,
   //output      [`PUT_BITS-1:0]                 index_o      ,
-  output      [`SOURCE_BITS-1:0]              source_o     ,
+  output      [`KIANA_SOURCE_BITS-1:0]              source_o     ,
 
-  output      [`OP_BITS-1:0]                  resp_opcode_o,
-  output      [`SOURCE_BITS-1:0]              resp_source_o,
-  output      [`DATA_BITS-1:0]                resp_data_o  ,
+  output      [`KIANA_OP_BITS-1:0]                  resp_opcode_o,
+  output      [`KIANA_SOURCE_BITS-1:0]              resp_source_o,
+  output      [`KIANA_DATA_BITS-1:0]                resp_data_o  ,
   output                                      resp_valid_o 
   );
-  reg         [`SOURCE_BITS-1:0]              d_source_reg   ;
-  reg         [`SOURCE_BITS-1:0]              d_source_reg_en;
-  reg         [`OP_BITS-1:0]                  d_opcode_reg   ;
-  reg         [`DATA_BITS-1:0]                d_data_reg     ;
+  reg         [`KIANA_SOURCE_BITS-1:0]              d_source_reg   ;
+  reg         [`KIANA_SOURCE_BITS-1:0]              d_source_reg_en;
+  reg         [`KIANA_OP_BITS-1:0]                  d_opcode_reg   ;
+  reg         [`KIANA_DATA_BITS-1:0]                d_data_reg     ;
   reg                                         d_fire_reg     ;
 
   always@(posedge clk or negedge rst_n) begin

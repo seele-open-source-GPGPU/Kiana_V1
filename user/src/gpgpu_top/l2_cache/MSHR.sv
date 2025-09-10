@@ -1,7 +1,7 @@
 
 `timescale  1ns/1ns
 `include "../define.svh"
-//`include "L2cache_define.v"
+import l2_cache::*;
 
 module MSHR(
   input logic                               clk                          ,
@@ -11,39 +11,39 @@ module MSHR(
   input logic                               mshr_alloc_valid_i           ,
   //input logic alloc handshake signals
   input logic                               mshr_alloc_hit_i             ,
-  input logic [`WAY_BITS-1:0]               mshr_alloc_way_i             ,
+  input logic [`KIANA_WAY_BITS-1:0]               mshr_alloc_way_i             ,
   input logic                               mshr_alloc_dirty_i           ,
   input logic                               mshr_alloc_flush_i           ,
   input logic                               mshr_alloc_last_flush_i      ,
-  input logic  [`SET_BITS-1:0]              mshr_alloc_set_i             ,
+  input logic  [`KIANA_SET_BITS-1:0]              mshr_alloc_set_i             ,
   //input logic  [`L2C_BITS-1:0]              mshr_alloc_l2cidx_i          ,
-  input logic  [`OP_BITS-1:0]               mshr_alloc_opcode_i          ,
-  input logic  [`SIZE_BITS-1:0]             mshr_alloc_size_i            ,
-  input logic  [`SOURCE_BITS-1:0]           mshr_alloc_source_i          ,
-  input logic  [`TAG_BITS-1:0]              mshr_alloc_tag_i             ,
-  input logic  [`OFFSET_BITS-1:0]           mshr_alloc_offset_i          ,
-  input logic  [`PUT_BITS-1:0]              mshr_alloc_put_i             ,
-  input logic  [`DATA_BITS-1:0]             mshr_alloc_data_i            ,
-  input logic  [`MASK_BITS-1:0]             mshr_alloc_mask_i            ,
-  input logic  [`PARAM_BITS-1:0]            mshr_alloc_param_i           ,
+  input logic  [`KIANA_OP_BITS-1:0]               mshr_alloc_opcode_i          ,
+  input logic  [`KIANA_SIZE_BITS-1:0]             mshr_alloc_size_i            ,
+  input logic  [`KIANA_SOURCE_BITS-1:0]           mshr_alloc_source_i          ,
+  input logic  [`KIANA_TAG_BITS-1:0]              mshr_alloc_tag_i             ,
+  input logic  [`KIANA_OFFSET_BITS-1:0]           mshr_alloc_offset_i          ,
+  input logic  [`KIANA_PUT_BITS-1:0]              mshr_alloc_put_i             ,
+  input logic  [`KIANA_DATA_BITS-1:0]             mshr_alloc_data_i            ,
+  input logic  [`KIANA_MASK_BITS-1:0]             mshr_alloc_mask_i            ,
+  input logic  [`KIANA_PARAM_BITS-1:0]            mshr_alloc_param_i           ,
   
   //output logic status signals
   output logic                              mshr_status_hit_o            ,
-  output logic  [`WAY_BITS-1:0]             mshr_status_way_o            ,
+  output logic  [`KIANA_WAY_BITS-1:0]             mshr_status_way_o            ,
   output logic                              mshr_status_dirty_o          ,
   output logic                              mshr_status_flush_o          ,
   output logic                              mshr_status_last_flush_o     ,
-  output logic  [`SET_BITS-1:0]             mshr_status_set_o            ,
+  output logic  [`KIANA_SET_BITS-1:0]             mshr_status_set_o            ,
   //output logic  [`L2C_BITS-1:0]             mshr_status_l2cidx_o         ,
-  output logic  [`OP_BITS-1:0]              mshr_status_opcode_o         ,
-  output logic  [`SIZE_BITS-1:0]            mshr_status_size_o           ,
-  output logic  [`SOURCE_BITS-1:0]          mshr_status_source_o         ,
-  output logic  [`TAG_BITS-1:0]             mshr_status_tag_o            ,
-  output logic  [`OFFSET_BITS-1:0]          mshr_status_offset_o         ,
-  output logic  [`PUT_BITS-1:0]             mshr_status_put_o            ,
-  output logic  [`DATA_BITS-1:0]            mshr_status_data_o           ,
-  output logic  [`MASK_BITS-1:0]            mshr_status_mask_o           ,
-  output logic  [`PARAM_BITS-1:0]           mshr_status_param_o          ,
+  output logic  [`KIANA_OP_BITS-1:0]              mshr_status_opcode_o         ,
+  output logic  [`KIANA_SIZE_BITS-1:0]            mshr_status_size_o           ,
+  output logic  [`KIANA_SOURCE_BITS-1:0]          mshr_status_source_o         ,
+  output logic  [`KIANA_TAG_BITS-1:0]             mshr_status_tag_o            ,
+  output logic  [`KIANA_OFFSET_BITS-1:0]          mshr_status_offset_o         ,
+  output logic  [`KIANA_PUT_BITS-1:0]             mshr_status_put_o            ,
+  output logic  [`KIANA_DATA_BITS-1:0]            mshr_status_data_o           ,
+  output logic  [`KIANA_MASK_BITS-1:0]            mshr_status_mask_o           ,
+  output logic  [`KIANA_PARAM_BITS-1:0]           mshr_status_param_o          ,
   
   //input logic valid bool
   input logic                               mshr_valid_i                 ,
@@ -59,95 +59,95 @@ module MSHR(
   input logic                               mshr_schedule_a_ready_i      ,
   output logic                              mshr_schedule_a_valid_o      ,
   //input logic  schedule part handshake signals
-  output logic  [`SET_BITS-1:0]             mshr_schedule_a_set_o        ,
+  output logic  [`KIANA_SET_BITS-1:0]             mshr_schedule_a_set_o        ,
   //output logic  [`L2C_BITS-1:0]             mshr_schedule_a_l2cidx_o     ,
-  output logic  [`OP_BITS-1:0]              mshr_schedule_a_opcode_o     ,
-  output logic  [`SIZE_BITS-1:0]            mshr_schedule_a_size_o       ,
-  output logic  [`SOURCE_BITS-1:0]          mshr_schedule_a_source_o     ,
-  output logic  [`TAG_BITS-1:0]             mshr_schedule_a_tag_o        ,
-  output logic  [`OFFSET_BITS-1:0]          mshr_schedule_a_offset_o     ,
-  output logic  [`PUT_BITS-1:0]             mshr_schedule_a_put_o        ,
-  output logic  [`DATA_BITS-1:0]            mshr_schedule_a_data_o       ,
-  output logic  [`MASK_BITS-1:0]            mshr_schedule_a_mask_o       ,
-  output logic  [`PARAM_BITS-1:0]           mshr_schedule_a_param_o      ,
+  output logic  [`KIANA_OP_BITS-1:0]              mshr_schedule_a_opcode_o     ,
+  output logic  [`KIANA_SIZE_BITS-1:0]            mshr_schedule_a_size_o       ,
+  output logic  [`KIANA_SOURCE_BITS-1:0]          mshr_schedule_a_source_o     ,
+  output logic  [`KIANA_TAG_BITS-1:0]             mshr_schedule_a_tag_o        ,
+  output logic  [`KIANA_OFFSET_BITS-1:0]          mshr_schedule_a_offset_o     ,
+  output logic  [`KIANA_PUT_BITS-1:0]             mshr_schedule_a_put_o        ,
+  output logic  [`KIANA_DATA_BITS-1:0]            mshr_schedule_a_data_o       ,
+  output logic  [`KIANA_MASK_BITS-1:0]            mshr_schedule_a_mask_o       ,
+  output logic  [`KIANA_PARAM_BITS-1:0]           mshr_schedule_a_param_o      ,
   
   //schedule part d  : Decoupled DirectoryResult_lite
   input logic                               mshr_schedule_d_ready_i      ,
   output logic                              mshr_schedule_d_valid_o      ,
   //schedule part d handshake signals
   output logic                              mshr_schedule_d_hit_o        ,
-  output logic  [`WAY_BITS-1:0]             mshr_schedule_d_way_o        ,
+  output logic  [`KIANA_WAY_BITS-1:0]             mshr_schedule_d_way_o        ,
   output logic                              mshr_schedule_d_dirty_o      ,
   output logic                              mshr_schedule_d_flush_o      ,
   output logic                              mshr_schedule_d_last_flush_o ,
-  output logic  [`SET_BITS-1:0]             mshr_schedule_d_set_o        ,
+  output logic  [`KIANA_SET_BITS-1:0]             mshr_schedule_d_set_o        ,
   //output logic  [`L2C_BITS-1:0]             mshr_schedule_d_l2cidx_o     ,
-  output logic  [`OP_BITS-1:0]              mshr_schedule_d_opcode_o     ,
-  output logic  [`SIZE_BITS-1:0]            mshr_schedule_d_size_o       ,
-  output logic  [`SOURCE_BITS-1:0]          mshr_schedule_d_source_o     ,
-  output logic  [`TAG_BITS-1:0]             mshr_schedule_d_tag_o        ,
-  output logic  [`OFFSET_BITS-1:0]          mshr_schedule_d_offset_o     ,
-  output logic  [`PUT_BITS-1:0]             mshr_schedule_d_put_o        ,
-  output logic  [`DATA_BITS-1:0]            mshr_schedule_d_data_o       ,
-  output logic  [`MASK_BITS-1:0]            mshr_schedule_d_mask_o       ,
-  output logic  [`PARAM_BITS-1:0]           mshr_schedule_d_param_o      ,
+  output logic  [`KIANA_OP_BITS-1:0]              mshr_schedule_d_opcode_o     ,
+  output logic  [`KIANA_SIZE_BITS-1:0]            mshr_schedule_d_size_o       ,
+  output logic  [`KIANA_SOURCE_BITS-1:0]          mshr_schedule_d_source_o     ,
+  output logic  [`KIANA_TAG_BITS-1:0]             mshr_schedule_d_tag_o        ,
+  output logic  [`KIANA_OFFSET_BITS-1:0]          mshr_schedule_d_offset_o     ,
+  output logic  [`KIANA_PUT_BITS-1:0]             mshr_schedule_d_put_o        ,
+  output logic  [`KIANA_DATA_BITS-1:0]            mshr_schedule_d_data_o       ,
+  output logic  [`KIANA_MASK_BITS-1:0]            mshr_schedule_d_mask_o       ,
+  output logic  [`KIANA_PARAM_BITS-1:0]           mshr_schedule_d_param_o      ,
   
   //schedule  data part   
-  output logic  [`DATA_BITS-1:0]            mshr_schedule_data_o         ,
+  output logic  [`KIANA_DATA_BITS-1:0]            mshr_schedule_data_o         ,
   
   //output logic  schedule dir part
   input logic                               mshr_schedule_dir_ready_i    ,
   output logic                              mshr_schedule_dir_valid_o    ,
   //schedule part dir handshake signals
-  output logic  [`WAY_BITS-1:0]             mshr_schedule_dir_way_o      ,
-  output logic  [`TAG_BITS-1:0]             mshr_schedule_dir_data_tag_o ,
-  output logic  [`SET_BITS-1:0]             mshr_schedule_dir_set_o      ,
+  output logic  [`KIANA_WAY_BITS-1:0]             mshr_schedule_dir_way_o      ,
+  output logic  [`KIANA_TAG_BITS-1:0]             mshr_schedule_dir_data_tag_o ,
+  output logic  [`KIANA_SET_BITS-1:0]             mshr_schedule_dir_set_o      ,
   
   //merge part
   input logic                               mshr_merge_valid_i           ,
   output logic                              mshr_merge_ready             ,
   //merge part handshake signals
-  input logic  [`MASK_BITS-1:0]             mshr_merge_mask_i            ,
-  input logic  [`DATA_BITS-1:0]             mshr_merge_data_i            ,    
-  input logic  [`OP_BITS-1:0]               mshr_merge_opcode_i          ,
-  input logic  [`PUT_BITS-1:0]              mshr_merge_put_i             ,
-  input logic  [`SOURCE_BITS-1:0]           mshr_merge_source_i          ,
+  input logic  [`KIANA_MASK_BITS-1:0]             mshr_merge_mask_i            ,
+  input logic  [`KIANA_DATA_BITS-1:0]             mshr_merge_data_i            ,    
+  input logic  [`KIANA_OP_BITS-1:0]               mshr_merge_opcode_i          ,
+  input logic  [`KIANA_PUT_BITS-1:0]              mshr_merge_put_i             ,
+  input logic  [`KIANA_SOURCE_BITS-1:0]           mshr_merge_source_i          ,
   
   //sinked part
   input logic                               mshr_sinked_valid_i          ,
   //sinked part handshake signals
-  input logic  [`OP_BITS-1:0]               mshr_sinked_opcode_i         ,
-  input logic  [`SOURCE_BITS-1:0]           mshr_sinked_source_i         ,
-  input logic  [`DATA_BITS-1:0]             mshr_sinked_data_i            
+  input logic  [`KIANA_OP_BITS-1:0]               mshr_sinked_opcode_i         ,
+  input logic  [`KIANA_SOURCE_BITS-1:0]           mshr_sinked_source_i         ,
+  input logic  [`KIANA_DATA_BITS-1:0]             mshr_sinked_data_i            
   );
   parameter writeBytes       = 4             ;
   parameter full_mask_bytes  = 8 * writeBytes;
   
   logic                               mixed_reg                      ;
-  logic   [`DATA_BITS-1:0]            data_reg                       ;
+  logic   [`KIANA_DATA_BITS-1:0]            data_reg                       ;
   //output logic status signals
   logic                               request_hit_reg                ;
-  logic   [`WAY_BITS-1:0]             request_way_reg                ;
+  logic   [`KIANA_WAY_BITS-1:0]             request_way_reg                ;
   logic                               request_dirty_reg              ;
   logic                               request_flush_reg              ;
   logic                               request_last_flush_reg         ;
-  logic   [`SET_BITS-1:0]             request_set_reg                ;
+  logic   [`KIANA_SET_BITS-1:0]             request_set_reg                ;
   //logic   [`L2C_BITS-1:0]             request_l2cidx_reg             ;
-  logic   [`OP_BITS-1:0]              request_opcode_reg             ;
-  logic   [`SIZE_BITS-1:0]            request_size_reg               ;
-  logic   [`SOURCE_BITS-1:0]          request_source_reg             ;
-  logic   [`TAG_BITS-1:0]             request_tag_reg                ;
-  logic   [`OFFSET_BITS-1:0]          request_offset_reg             ;
-  logic   [`PUT_BITS-1:0]             request_put_reg                ;
-  logic   [`DATA_BITS-1:0]            request_data_reg               ;
-  logic   [`MASK_BITS-1:0]            request_mask_reg               ;
-  logic   [`PARAM_BITS-1:0]           request_param_reg              ;
+  logic   [`KIANA_OP_BITS-1:0]              request_opcode_reg             ;
+  logic   [`KIANA_SIZE_BITS-1:0]            request_size_reg               ;
+  logic   [`KIANA_SOURCE_BITS-1:0]          request_source_reg             ;
+  logic   [`KIANA_TAG_BITS-1:0]             request_tag_reg                ;
+  logic   [`KIANA_OFFSET_BITS-1:0]          request_offset_reg             ;
+  logic   [`KIANA_PUT_BITS-1:0]             request_put_reg                ;
+  logic   [`KIANA_DATA_BITS-1:0]            request_data_reg               ;
+  logic   [`KIANA_MASK_BITS-1:0]            request_mask_reg               ;
+  logic   [`KIANA_PARAM_BITS-1:0]           request_param_reg              ;
   
-  logic [`DATA_BITS-1:0] full_mask;
+  logic [`KIANA_DATA_BITS-1:0] full_mask;
   
   assign full_mask = {{full_mask_bytes{mshr_merge_mask_i[0]}}, {full_mask_bytes{mshr_merge_mask_i[1]}}, {full_mask_bytes{mshr_merge_mask_i[2]}}, {full_mask_bytes{mshr_merge_mask_i[3]}}};
   
-  logic [`DATA_BITS-1:0] merge_data;
+  logic [`KIANA_DATA_BITS-1:0] merge_data;
   assign merge_data = ( mshr_merge_data_i & full_mask ) | (data_reg & (~full_mask));
   
   logic sche_a_valid  ;//init to 0
@@ -289,7 +289,7 @@ module MSHR(
   assign mshr_schedule_a_source_o= request_source_reg          ;
   assign mshr_schedule_a_data_o  = request_data_reg            ;
   assign mshr_schedule_a_size_o  = request_size_reg            ;
-  assign mshr_schedule_a_mask_o  = {`MASK_BITS{1'b1}}          ;
+  assign mshr_schedule_a_mask_o  = {`KIANA_MASK_BITS{1'b1}}          ;
   
   always_ff @(posedge clk or negedge rst_n) begin
     if(~rst_n) begin

@@ -21,28 +21,28 @@ module SourceA(
   input                                sourceA_req_valid_i      ,
 
   //sourceA req part handshake signals
-  input  [`SET_BITS-1:0]               sourceA_req_set_i        ,
+  input  [`KIANA_SET_BITS-1:0]               sourceA_req_set_i        ,
   //input  [`L2C_BITS-1:0]               sourceA_req_l2cidx_i     ,
-  input  [`OP_BITS-1:0]                sourceA_req_opcode_i     ,
-  input  [`SIZE_BITS-1:0]              sourceA_req_size_i       ,
-  input  [`SOURCE_BITS-1:0]            sourceA_req_source_i     ,
-  input  [`TAG_BITS-1:0]               sourceA_req_tag_i        ,
-  input  [`OFFSET_BITS-1:0]            sourceA_req_offset_i     ,
-  //input  [`PUT_BITS-1:0]               sourceA_req_put_i        ,
-  input  [`DATA_BITS-1:0]              sourceA_req_data_i       ,
-  input  [`MASK_BITS-1:0]              sourceA_req_mask_i       ,
-  //input  [`PARAM_BITS-1:0]             sourceA_req_param_i      ,
+  input  [`KIANA_OP_BITS-1:0]                sourceA_req_opcode_i     ,
+  input  [`KIANA_SIZE_BITS-1:0]              sourceA_req_size_i       ,
+  input  [`KIANA_SOURCE_BITS-1:0]            sourceA_req_source_i     ,
+  input  [`KIANA_TAG_BITS-1:0]               sourceA_req_tag_i        ,
+  input  [`KIANA_OFFSET_BITS-1:0]            sourceA_req_offset_i     ,
+  //input  [`KIANA_PUT_BITS-1:0]               sourceA_req_put_i        ,
+  input  [`KIANA_DATA_BITS-1:0]              sourceA_req_data_i       ,
+  input  [`KIANA_MASK_BITS-1:0]              sourceA_req_mask_i       ,
+  //input  [`KIANA_PARAM_BITS-1:0]             sourceA_req_param_i      ,
 
   input                                sourceA_a_ready_i        ,
   output                               sourceA_a_valid_o        ,
   //a part decoupled 
-  output  [`OP_BITS-1:0]               sourceA_a_opcode_o       ,
-  output  [`SIZE_BITS-1:0]             sourceA_a_size_o         ,
-  output  [`SOURCE_BITS-1:0]           sourceA_a_source_o       ,
-  output  [`ADDRESS_BITS-1:0]          sourceA_a_address_o      ,
-  output  [`MASK_BITS-1:0]             sourceA_a_mask_o         ,
-  output  [`DATA_BITS-1:0]             sourceA_a_data_o         ,
-  output  [`PARAM_BITS-1:0]            sourceA_a_param_o        
+  output  [`KIANA_OP_BITS-1:0]               sourceA_a_opcode_o       ,
+  output  [`KIANA_SIZE_BITS-1:0]             sourceA_a_size_o         ,
+  output  [`KIANA_SOURCE_BITS-1:0]           sourceA_a_source_o       ,
+  output  [`KIANA_ADDRESS_BITS-1:0]          sourceA_a_address_o      ,
+  output  [`KIANA_MASK_BITS-1:0]             sourceA_a_mask_o         ,
+  output  [`KIANA_DATA_BITS-1:0]             sourceA_a_data_o         ,
+  output  [`KIANA_PARAM_BITS-1:0]            sourceA_a_param_o        
   
   );
   
@@ -50,11 +50,11 @@ module SourceA(
   assign sourceA_a_valid_o   = sourceA_req_valid_i   ;
   assign sourceA_a_opcode_o  = sourceA_req_opcode_i  ;
   assign sourceA_a_source_o  = sourceA_req_source_i  ;
-  //assign sourceA_a_address_o = {sourceA_req_tag_i[`TAG_BITS-1:0], sourceA_req_l2cidx_i[`L2C_BITS-1:0],sourceA_req_set_i[`SET_BITS-1:0],sourceA_req_offset_i[`OFFSET_BITS-1:0]};
-  assign sourceA_a_address_o = {sourceA_req_tag_i[`TAG_BITS-1:0],sourceA_req_set_i[`SET_BITS-1:0],sourceA_req_offset_i[`OFFSET_BITS-1:0]};
+  //assign sourceA_a_address_o = {sourceA_req_tag_i[`KIANA_TAG_BITS-1:0], sourceA_req_l2cidx_i[`L2C_BITS-1:0],sourceA_req_set_i[`KIANA_SET_BITS-1:0],sourceA_req_offset_i[`KIANA_OFFSET_BITS-1:0]};
+  assign sourceA_a_address_o = {sourceA_req_tag_i[`KIANA_TAG_BITS-1:0],sourceA_req_set_i[`KIANA_SET_BITS-1:0],sourceA_req_offset_i[`KIANA_OFFSET_BITS-1:0]};
   assign sourceA_a_mask_o    = sourceA_req_mask_i    ;
   assign sourceA_a_data_o    = sourceA_req_data_i    ;
   assign sourceA_a_size_o    = sourceA_req_size_i    ;
-  assign sourceA_a_param_o   = {`PARAM_BITS{1'b0}}   ;
+  assign sourceA_a_param_o   = {`KIANA_PARAM_BITS{1'b0}}   ;
 
 endmodule

@@ -1,53 +1,53 @@
 `timescale  1ns/1ns
 `include "../define.svh"
-//`include "L2cache_define.v"
+import l2_cache::*;
 
 module directory_test#(
-  parameter NUM_WAY = 2**`WAY_BITS,
-  parameter NUM_SET = 2**`SET_BITS
+  parameter NUM_WAY = 2**`KIANA_WAY_BITS,
+  parameter NUM_SET = 2**`KIANA_SET_BITS
   )(
   input logic                                             clk                                                                       ,
   input logic                                             rst_n                                                                     ,
   //write port
   input logic                                             dir_write_valid_i                                                         ,
   output logic                                            dir_write_ready_o                                                         ,
-  input logic [`WAY_BITS-1:0]                             dir_write_way_i                                                           ,
+  input logic [`KIANA_WAY_BITS-1:0]                             dir_write_way_i                                                           ,
   //tag is the write data
-  input logic [`TAG_BITS-1:0]                             dir_write_tag_i                                                           ,
-  input logic [`SET_BITS-1:0]                             dir_write_set_i                                                           ,
+  input logic [`KIANA_TAG_BITS-1:0]                             dir_write_tag_i                                                           ,
+  input logic [`KIANA_SET_BITS-1:0]                             dir_write_set_i                                                           ,
   //read port
   input logic                                             dir_read_valid_i                                                          ,
   output logic                                            dir_read_ready_o                                                          ,
-  input logic [`SET_BITS-1:0]                             dir_read_set_i                                                            ,
+  input logic [`KIANA_SET_BITS-1:0]                             dir_read_set_i                                                            ,
   //input logic [`L2C_BITS-1:0]                             dir_read_l2cidx_i                                                         ,
-  input logic [`OP_BITS-1:0]                              dir_read_opcode_i                                                         ,
-  input logic [`SIZE_BITS-1:0]                            dir_read_size_i                                                           ,
-  input logic [`SOURCE_BITS-1:0]                          dir_read_source_i                                                         ,
-  input logic [`TAG_BITS-1:0]                             dir_read_tag_i                                                            ,
-  input logic [`OFFSET_BITS-1:0]                          dir_read_offset_i                                                         ,
-  input logic [`PUT_BITS-1:0]                             dir_read_put_i                                                            ,
-  input logic [`DATA_BITS-1:0]                            dir_read_data_i                                                           ,
-  input logic [`MASK_BITS-1:0]                            dir_read_mask_i                                                           ,
+  input logic [`KIANA_OP_BITS-1:0]                              dir_read_opcode_i                                                         ,
+  input logic [`KIANA_SIZE_BITS-1:0]                            dir_read_size_i                                                           ,
+  input logic [`KIANA_SOURCE_BITS-1:0]                          dir_read_source_i                                                         ,
+  input logic [`KIANA_TAG_BITS-1:0]                             dir_read_tag_i                                                            ,
+  input logic [`KIANA_OFFSET_BITS-1:0]                          dir_read_offset_i                                                         ,
+  input logic [`KIANA_PUT_BITS-1:0]                             dir_read_put_i                                                            ,
+  input logic [`KIANA_DATA_BITS-1:0]                            dir_read_data_i                                                           ,
+  input logic [`KIANA_MASK_BITS-1:0]                            dir_read_mask_i                                                           ,
   input logic [2:0]                                       dir_read_param_i                                                          ,
   //result port
   output logic                                            dir_result_valid_o                                                        ,
   input logic                                             dir_result_ready_i                                                        ,
-  output logic [`TAG_BITS-1:0]                            dir_result_victim_tag_o                                                   ,
-  output logic [`WAY_BITS-1:0]                            dir_result_way_o                                                          ,
+  output logic [`KIANA_TAG_BITS-1:0]                            dir_result_victim_tag_o                                                   ,
+  output logic [`KIANA_WAY_BITS-1:0]                            dir_result_way_o                                                          ,
   output logic                                            dir_result_hit_o                                                          ,
   output logic                                            dir_result_dirty_o                                                        ,
   output logic                                            dir_result_flush_o                                                        ,
   output logic                                            dir_result_last_flush_o                                                   ,
-  output logic [`SET_BITS-1:0]                            dir_result_set_o                                                          ,
+  output logic [`KIANA_SET_BITS-1:0]                            dir_result_set_o                                                          ,
   //output logic [`L2C_BITS-1:0]                            dir_result_l2cidx_o                                                       ,
-  output logic [`OP_BITS-1:0]                             dir_result_opcode_o                                                       ,
-  output logic [`SIZE_BITS-1:0]                           dir_result_size_o                                                         ,
-  output logic [`SOURCE_BITS-1:0]                         dir_result_source_o                                                       ,
-  output logic [`TAG_BITS-1:0]                            dir_result_tag_o                                                          ,
-  output logic [`OFFSET_BITS-1:0]                         dir_result_offset_o                                                       ,
-  output logic [`PUT_BITS-1:0]                            dir_result_put_o                                                          ,
-  output logic [`DATA_BITS-1:0]                           dir_result_data_o                                                         ,
-  output logic [`MASK_BITS-1:0]                           dir_result_mask_o                                                         ,
+  output logic [`KIANA_OP_BITS-1:0]                             dir_result_opcode_o                                                       ,
+  output logic [`KIANA_SIZE_BITS-1:0]                           dir_result_size_o                                                         ,
+  output logic [`KIANA_SOURCE_BITS-1:0]                         dir_result_source_o                                                       ,
+  output logic [`KIANA_TAG_BITS-1:0]                            dir_result_tag_o                                                          ,
+  output logic [`KIANA_OFFSET_BITS-1:0]                         dir_result_offset_o                                                       ,
+  output logic [`KIANA_PUT_BITS-1:0]                            dir_result_put_o                                                          ,
+  output logic [`KIANA_DATA_BITS-1:0]                           dir_result_data_o                                                         ,
+  output logic [`KIANA_MASK_BITS-1:0]                           dir_result_mask_o                                                         ,
   output logic [2:0]                                      dir_result_param_o                                                        ,
   //ready port
   output logic                                            dir_ready_o                                                               ,
@@ -60,14 +60,14 @@ module directory_test#(
   );
 
   logic cc_dir_w_valid                              ; //wen of this sram
-  logic [NUM_WAY*`TAG_BITS-1:0] cc_dir_w_data       ; //wdata of this sram
-  logic [`WAY_BITS-1:0] cc_dir_w_way_addr           ; //way waddr of this sram
-  logic [`SET_BITS-1:0] cc_dir_w_set_addr           ; //set waddr of this sram
+  logic [NUM_WAY*`KIANA_TAG_BITS-1:0] cc_dir_w_data       ; //wdata of this sram
+  logic [`KIANA_WAY_BITS-1:0] cc_dir_w_way_addr           ; //way waddr of this sram
+  logic [`KIANA_SET_BITS-1:0] cc_dir_w_set_addr           ; //set waddr of this sram
   logic cc_dir_r_valid                              ;  
-  logic [(NUM_WAY)*`TAG_BITS-1:0] cc_dir_r_data     ;
-  logic [(NUM_WAY)*`TAG_BITS-1:0] regout       ;
+  logic [(NUM_WAY)*`KIANA_TAG_BITS-1:0] cc_dir_r_data     ;
+  logic [(NUM_WAY)*`KIANA_TAG_BITS-1:0] regout       ;
   
-  logic  [`SET_BITS:0] wipeCount;
+  logic  [`KIANA_SET_BITS:0] wipeCount;
   logic  wipeoff                ; //regnext(next,init) - >(false,true)
   logic wipeDone,wipeSet       ;
   
@@ -75,15 +75,15 @@ module directory_test#(
   logic flush_issue                            ;
   logic  is_invalidate_reg                      ; //init 0
   logic is_invalidate                          ;
-  logic  [`SET_BITS + `WAY_BITS-1:0] flushCount ; //init 0
+  logic  [`KIANA_SET_BITS + `KIANA_WAY_BITS-1:0] flushCount ; //init 0
   logic flushDone                              ;
   logic cc_dir_r_set_addr                      ; //set raddr of this sram
   
   logic ren ;
   logic  ren1;
   
-  logic [`TAG_BITS-1:0] tag; //init 0 ;
-  logic [`SET_BITS-1:0] set; //init 0 ;
+  logic [`KIANA_TAG_BITS-1:0] tag; //init 0 ;
+  logic [`KIANA_SET_BITS-1:0] set; //init 0 ;
   
   logic wen_new    ;
   logic wen        ;
@@ -98,54 +98,54 @@ module directory_test#(
   logic lfsr_xor;
   logic [15:0] victim_LFSR ;
   */
-  logic [`WAY_BITS-1:0] victimWay;
+  logic [`KIANA_WAY_BITS-1:0] victimWay;
   
   logic setQuash_1;
   logic  setQuash  ;
   logic tagmatch_1;
   logic  tagmatch  ;
-  //logic [`WAY_BITS-1:0] writeWay1; //init 0 
+  //logic [`KIANA_WAY_BITS-1:0] writeWay1; //init 0 
   
-  //logic [`TAG_BITS-1:0] ways [NUM_WAY-1:0];
-  logic [(NUM_WAY)*`TAG_BITS-1:0] ways        ;
+  //logic [`KIANA_TAG_BITS-1:0] ways [NUM_WAY-1:0];
+  logic [(NUM_WAY)*`KIANA_TAG_BITS-1:0] ways        ;
   //logic [NUM_WAY-1:0]status_dirty;
   logic [NUM_WAY-1:0]             status_valid;
-  //logic  [`SET_BITS-1:0] writeSet1;
+  //logic  [`KIANA_SET_BITS-1:0] writeSet1;
   logic [NUM_WAY-1:0]             hits        ;
-  logic [`WAY_BITS-1:0]           hitway      ;
+  logic [`KIANA_WAY_BITS-1:0]           hitway      ;
   logic                           hit         ;
-  logic [`SET_BITS-1:0]           flush_set   ;
-  logic [`WAY_BITS-1:0]           flush_way   ;
-  logic [`TAG_BITS-1:0]           flush_tag   ;
+  logic [`KIANA_SET_BITS-1:0]           flush_set   ;
+  logic [`KIANA_WAY_BITS-1:0]           flush_way   ;
+  logic [`KIANA_TAG_BITS-1:0]           flush_tag   ;
   logic                            valid_reg   ; //init 0
   
   logic valid_signal;
   //read_bits_reg init 0
-  logic [`SET_BITS-1:0]                            read_bits_reg_set      ;
+  logic [`KIANA_SET_BITS-1:0]                            read_bits_reg_set      ;
   //logic [`L2C_BITS-1:0]                            read_bits_reg_l2cidx   ;
-  logic [`OP_BITS-1:0]                             read_bits_reg_opcode   ;
-  logic [`SIZE_BITS-1:0]                           read_bits_reg_size     ;
-  logic [`SOURCE_BITS-1:0]                         read_bits_reg_source   ;
-  logic [`TAG_BITS-1:0]                            read_bits_reg_tag      ;
-  logic [`OFFSET_BITS-1:0]                         read_bits_reg_offset   ;
-  logic [`PUT_BITS-1:0]                            read_bits_reg_put      ;
-  logic [`DATA_BITS-1:0]                           read_bits_reg_data     ;
-  logic [`MASK_BITS-1:0]                           read_bits_reg_mask     ;
+  logic [`KIANA_OP_BITS-1:0]                             read_bits_reg_opcode   ;
+  logic [`KIANA_SIZE_BITS-1:0]                           read_bits_reg_size     ;
+  logic [`KIANA_SOURCE_BITS-1:0]                         read_bits_reg_source   ;
+  logic [`KIANA_TAG_BITS-1:0]                            read_bits_reg_tag      ;
+  logic [`KIANA_OFFSET_BITS-1:0]                         read_bits_reg_offset   ;
+  logic [`KIANA_PUT_BITS-1:0]                            read_bits_reg_put      ;
+  logic [`KIANA_DATA_BITS-1:0]                           read_bits_reg_data     ;
+  logic [`KIANA_MASK_BITS-1:0]                           read_bits_reg_mask     ;
   logic [2:0]                                      read_bits_reg_param    ;
   logic flush_issue_reg_1; //init 0
-  //logic [NUM_WAY-1:0] status_reg_dirty_reg_1 [NUM_SET-1:0]; //init 0  logic [`WAY_BITS-1:0] status_reg_dirty [`SET_BITS-1:0]; 
-  logic [NUM_WAY*(NUM_SET)-1:0] status_reg_dirty_reg_1 ; //init 0  logic [`WAY_BITS-1:0] status_reg_dirty [`SET_BITS-1:0]; 
-  logic [`SET_BITS-1:0] flush_set_reg_1; //init 0
-  logic [`WAY_BITS-1:0] flush_way_reg_1; //init 0
-  logic [`TAG_BITS-1:0] flush_tag_reg_1; //init 0
+  //logic [NUM_WAY-1:0] status_reg_dirty_reg_1 [NUM_SET-1:0]; //init 0  logic [`KIANA_WAY_BITS-1:0] status_reg_dirty [`KIANA_SET_BITS-1:0]; 
+  logic [NUM_WAY*(NUM_SET)-1:0] status_reg_dirty_reg_1 ; //init 0  logic [`KIANA_WAY_BITS-1:0] status_reg_dirty [`KIANA_SET_BITS-1:0]; 
+  logic [`KIANA_SET_BITS-1:0] flush_set_reg_1; //init 0
+  logic [`KIANA_WAY_BITS-1:0] flush_way_reg_1; //init 0
+  logic [`KIANA_TAG_BITS-1:0] flush_tag_reg_1; //init 0
   logic flushDone_reg_1; //init 0
-  //logic [`TAG_BITS-1:0] dir_read_tag_i_reg_1;
-  logic [`SET_BITS-1:0] dir_read_set_i_reg_1;
-  logic [`WAY_BITS-1:0] dir_write_way_i_reg_1;
+  //logic [`KIANA_TAG_BITS-1:0] dir_read_tag_i_reg_1;
+  logic [`KIANA_SET_BITS-1:0] dir_read_set_i_reg_1;
+  logic [`KIANA_WAY_BITS-1:0] dir_write_way_i_reg_1;
   logic about_replace;
   logic timely_hit;
   
-  logic  [`TAG_BITS-1:0] dir_read_tag_r ;
+  logic  [`KIANA_TAG_BITS-1:0] dir_read_tag_r ;
   logic [NUM_WAY-1:0]   w_req_waymask_i;
 
   always_ff @(posedge clk or negedge rst_n) begin
@@ -176,15 +176,15 @@ module directory_test#(
   assign cc_dir_w_way_addr = dir_write_way_i                                      ;//wipedone has been processed in the previous loop.
   assign w_req_waymask_i   = (!wipeDone) ? {NUM_WAY{1'b1}} : ({{(NUM_WAY-1){1'b0}},1'b1} << cc_dir_w_way_addr);    
     
-  assign wipeDone          = wipeCount [`SET_BITS]   ;
-  assign wipeSet           = wipeCount[`SET_BITS-1:0];
+  assign wipeDone          = wipeCount [`KIANA_SET_BITS]   ;
+  assign wipeSet           = wipeCount[`KIANA_SET_BITS-1:0];
   sram_template  #(     
-  .GEN_WIDTH      (`TAG_BITS        ),
+  .GEN_WIDTH      (`KIANA_TAG_BITS        ),
   .NUM_SET        (NUM_SET          ),
   .NUM_WAY        (NUM_WAY          ),
-  .SET_DEPTH      (`SET_BITS        ),
-  .WAY_DEPTH      (`WAY_BITS        ))
-  //.DATA_WIDTH     (`TAG_BITS        ))
+  .SET_DEPTH      (`KIANA_SET_BITS        ),
+  .WAY_DEPTH      (`KIANA_WAY_BITS        ))
+  //.DATA_WIDTH     (`KIANA_TAG_BITS        ))
   sram_template   (
   .clk            (clk              ),
   .rst_n          (rst_n            ),
@@ -352,13 +352,13 @@ module directory_test#(
   end
   assign victim_LFSR = lfsr;
   */
-  logic [`WAY_BITS-1:0] temp_way;
+  logic [`KIANA_WAY_BITS-1:0] temp_way;
   assign temp_way = hit ? hitway :( (dir_result_valid_o & dir_result_ready_i) ? dir_result_way_o : (dir_write_valid_i ?  dir_write_way_i : 'b0));
-  logic [`WAY_BITS*(`SET_BITS+1)-1:0] lru_way_o;
-  //assign victimWay = victim_LFSR[`WAY_BITS-1:0];
+  logic [`KIANA_WAY_BITS*(`KIANA_SET_BITS+1)-1:0] lru_way_o;
+  //assign victimWay = victim_LFSR[`KIANA_WAY_BITS-1:0];
   genvar q;
   generate
-    for(q=0;q<`SET_BITS+1;q=q+1)
+    for(q=0;q<`KIANA_SET_BITS+1;q=q+1)
        begin:lru_for_every_set
          lru_matrix #(
          .NUM_WAY  (NUM_WAY),// number way of one set    
@@ -368,13 +368,13 @@ module directory_test#(
          .rst_n          (rst_n                                                                                               )   ,
          .update_entry_i (((dir_result_valid_o && dir_result_ready_i )||(hit)||(dir_write_valid_i)) && (dir_result_set_o == q))   , // input logic update condition
          .update_index_i (temp_way                                                                                            )   , // input logic update wayId
-         .lru_index_o    (lru_way_o[q*`WAY_BITS+:`WAY_BITS]                                                                   )     // output logic replacement wayId
+         .lru_index_o    (lru_way_o[q*`KIANA_WAY_BITS+:`KIANA_WAY_BITS]                                                                   )     // output logic replacement wayId
          );
   
        end
   endgenerate
 
-  assign victimWay = lru_way_o[dir_result_set_o *`WAY_BITS+:`WAY_BITS] ;
+  assign victimWay = lru_way_o[dir_result_set_o *`KIANA_WAY_BITS+:`KIANA_WAY_BITS] ;
   
   assign setQuash_1 = wen && dir_write_set_i == dir_read_set_i_reg_1/*dir_read_set_i*/;
   //assign setQuash = wen && dir_write_set_i == set ;
@@ -395,7 +395,7 @@ module directory_test#(
            end
   end
   */  
-  //logic [`TAG_BITS-1:0] regout [NUM_WAY-1:0];
+  //logic [`KIANA_TAG_BITS-1:0] regout [NUM_WAY-1:0];
   
   assign ways = regout;
   assign status_valid = status_reg_valid[(NUM_WAY)*set +:NUM_WAY];
@@ -403,8 +403,8 @@ module directory_test#(
   generate
     for(p=0;p<NUM_WAY;p=p+1)
       begin:gen_hits
-  //      assign hits[p] = ways[(p+1)*`TAG_BITS-1-:`TAG_BITS] == tag && (!setQuash) && status_valid[p];
-        assign hits[p] = ways[(p+1)*`TAG_BITS-1-:`TAG_BITS] == tag &&  status_valid[p];
+  //      assign hits[p] = ways[(p+1)*`KIANA_TAG_BITS-1-:`KIANA_TAG_BITS] == tag && (!setQuash) && status_valid[p];
+        assign hits[p] = ways[(p+1)*`KIANA_TAG_BITS-1-:`KIANA_TAG_BITS] == tag &&  status_valid[p];
   //      if(hits[p])
   //        assign hitway = p;
       end
@@ -412,7 +412,7 @@ module directory_test#(
   
   one2bin #(
   .ONE_WIDTH(NUM_WAY),
-  .BIN_WIDTH(`WAY_BITS)
+  .BIN_WIDTH(`KIANA_WAY_BITS)
   )U_one2bin(
   .oh(hits),
   .bin(hitway)
@@ -422,7 +422,7 @@ module directory_test#(
   
   assign flush_set         = flushCount / NUM_WAY                      ;
   assign flush_way         = flushCount % NUM_WAY                      ;
-  assign flush_tag         = ways[flush_way_reg_1*`TAG_BITS+:`TAG_BITS];
+  assign flush_tag         = ways[flush_way_reg_1*`KIANA_TAG_BITS+:`KIANA_TAG_BITS];
   assign dir_ready_o       = wipeDone && !flush_issue_reg              ;
   assign dir_write_ready_o = wipeDone && !flush_issue_reg              ;
   
@@ -540,17 +540,17 @@ module directory_test#(
   assign dir_result_put_o        = flush_issue_reg_1 ? 1'b0 : read_bits_reg_put ;
   assign dir_result_data_o       = flush_issue_reg_1 ? 0 : read_bits_reg_data ;
   assign dir_result_offset_o     = flush_issue_reg_1 ? 0 : read_bits_reg_offset ;
-  assign dir_result_size_o       = flush_issue_reg_1 ? $clog2(`L2CACHE_BEATBYTES) : read_bits_reg_size ;
+  assign dir_result_size_o       = flush_issue_reg_1 ? $clog2(`KIANA_L2CACHE_BEATBYTES) : read_bits_reg_size ;
   assign dir_result_set_o        = flush_issue_reg_1 ? flush_set_reg_1 : read_bits_reg_set ;
   assign dir_result_source_o     = read_bits_reg_source ;
   //assign dir_result_source_o   = flush_issue_reg_1 ? {1'b1, : read_bits_reg_source ;
   assign dir_result_tag_o        = flush_issue_reg_1 ? flush_tag : read_bits_reg_tag ;
   assign dir_result_opcode_o     = flush_issue_reg_1 ? `HINT: read_bits_reg_opcode ;
-  assign dir_result_mask_o       = flush_issue_reg_1 ? {`MASK_BITS{1'b1}} : read_bits_reg_mask ;
+  assign dir_result_mask_o       = flush_issue_reg_1 ? {`KIANA_MASK_BITS{1'b1}} : read_bits_reg_mask ;
   assign dir_result_dirty_o      = flush_issue_reg_1 ? status_reg_dirty_reg_1[(flush_set_reg_1)*(NUM_WAY) + flush_way_reg_1 ] : (not_replace ? 0: status_reg_dirty[(set)*(NUM_WAY) + dir_result_way_o ] ) ;    
   assign dir_result_last_flush_o = flush_issue_reg_1 ? flushDone_reg_1 : 1'b0 ;
   assign dir_result_flush_o      = flush_issue_reg_1 ;
-  assign dir_result_victim_tag_o = ways[dir_result_way_o*`TAG_BITS+:`TAG_BITS];//ways[flush_way*`TAG_BITS+:`TAG_BITS];
+  assign dir_result_victim_tag_o = ways[dir_result_way_o*`KIANA_TAG_BITS+:`KIANA_TAG_BITS];//ways[flush_way*`KIANA_TAG_BITS+:`KIANA_TAG_BITS];
   //assign dir_result_l2cidx_o   = flush_issue_reg_1 ? 0 : read_bits_reg_l2cidx ;
   assign dir_result_param_o      = flush_issue_reg_1 ? 0 : read_bits_reg_param ;
 
