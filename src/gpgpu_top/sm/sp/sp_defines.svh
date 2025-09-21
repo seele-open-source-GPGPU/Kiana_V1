@@ -1,0 +1,9 @@
+`ifndef SP_DEFINES
+`define SP_DEFINES
+
+`define NUM_WARP 32 // 只能更小不能更大
+`define NUM_THREAD 32
+`define NUM_SP_INTERRUPT 32
+
+`define INTERRUPT_CSR_INVALID_ADDR 32'h0000_0000_0000_0000_0000_0000_0000_0001
+`endif
