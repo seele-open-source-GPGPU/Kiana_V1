@@ -1,11 +1,12 @@
 `include "sp_defines.svh"
-module csr_register_group(
+module csr_register_group#(parameter CSR_META_DATA_INIT_ADDR=11'b0000_0000_000)(
     input clk,
     input rst_n,
     // slots的元数据
     input [15:0]    w_addr,
     input [31:0]    w_data,
     input           w_vld,
+    output [`NUM_WARP-1:0]          initialize_simt_stack_o,
     output [31:0]                   work_group_each_slots_o [`NUM_WARP],
     output [$clog2(`NUM_WARP)-1:0]  warp_id_each_slots_o [`NUM_WARP],
     output [31:0]                   init_pc_each_slots_o [`NUM_WARP],
@@ -65,6 +66,7 @@ module csr_register_group(
     logic [`NUM_WARP-1:0]           ExecuteMask;
     logic [31:0]                    NumWorkgroup;
     logic [31:0]                    NumThreadInPerWorkgroup;
+    logic [`NUM_WARP-1:0]           InitializeSimtStack;
 
     logic [`NUM_WARP-1:0]           Finished;
     // 信号定义：线程同步挂起
@@ -74,8 +76,8 @@ module csr_register_group(
     logic [`NUM_SP_INTERRUPT-1:0]   IrMask;
     logic                           Ir;
 
-    logic [`NUM_SP_INTERRUPT-1:0]   Ir_CSR_INVALID_ADDR;
-    logic [`NUM_SP_INTERRUPT-1:0]   Ir_CSR_INVALID_COMMON_CSR_OP;
+    logic                           Ir_CSR_INVALID_ADDR;
+    logic                           Ir_CSR_INVALID_COMMON_CSR_OP;
     // 信号定义：内存栅栏
     logic [`NUM_WARP-1:0]           FenceW;
     logic [`NUM_WARP-1:0]           FenceR;
@@ -140,8 +142,9 @@ module csr_register_group(
             logic [`NUM_SP_INTERRUPT-1:0] mask;
             logic [`NUM_SP_INTERRUPT-1:0] pending;
             logic [`NUM_SP_INTERRUPT-1:0] irq_inside_csr;
-            irq_inside_csr=Ir_CSR_INVALID_ADDR;
-            irq_inside_csr=irq_inside_csr | Ir_CSR_INVALID_COMMON_CSR_OP;
+            irq_inside_csr=0;
+            irq_inside_csr[0]=Ir_CSR_INVALID_ADDR;
+            irq_inside_csr[1]=Ir_CSR_INVALID_COMMON_CSR_OP;
 
             if(ir_clear_vld) clear_mask=ir_clear;
             else clear_mask=0;
@@ -162,6 +165,7 @@ module csr_register_group(
     assign execute_mask_o=ExecuteMask;
     assign num_threads_per_wg_o=NumThreadInPerWorkgroup;
     assign num_workgroup_o=NumWorkgroup;
+    assign initialize_simt_stack_o=InitializeSimtStack;
 
     assign finished_o=Finished;
 
@@ -175,29 +179,32 @@ module csr_register_group(
             Finished<=0;
             NumWorkgroup<=0;
             NumThreadInPerWorkgroup<=0;
+            InitializeSimtStack<=0;
         end
         else begin
+            InitializeSimtStack<=0;
             if(finished_vld) Finished<=finished_i;
             Ir_CSR_INVALID_ADDR<=0;
             if(w_vld) begin
-                case (w_addr[15:5])
+                case (w_addr[15:5]-CSR_META_DATA_INIT_ADDR)
                     11'b0000_0000_000:begin
-                        if(w_addr[4:0]>=`NUM_WARP) Ir_CSR_INVALID_ADDR<=`INTERRUPT_CSR_METADATA_INVALID_ADDR;
+                        if(w_addr[4:0]>=`NUM_WARP) Ir_CSR_INVALID_ADDR<=1;//`INTERRUPT_CSR_METADATA_INVALID_ADDR;
                         else WorkGroupEachSlots[w_addr[4:0]]<=w_data;
                     end
                     11'b0000_0000_001:begin
-                        if(w_addr[4:0]>=`NUM_WARP) Ir_CSR_INVALID_ADDR<=`INTERRUPT_CSR_METADATA_INVALID_ADDR;
+                        if(w_addr[4:0]>=`NUM_WARP) Ir_CSR_INVALID_ADDR<=1;//`INTERRUPT_CSR_METADATA_INVALID_ADDR;
                         else WarpIdEachSlots[w_addr[4:0]]<=w_data[$clog2(`NUM_WARP)-1:0];
                     end
                     11'b0000_0000_010:begin
-                        if(w_addr[4:0]>=`NUM_WARP) Ir_CSR_INVALID_ADDR<=`INTERRUPT_CSR_METADATA_INVALID_ADDR;
+                        if(w_addr[4:0]>=`NUM_WARP) Ir_CSR_INVALID_ADDR<=1;//`INTERRUPT_CSR_METADATA_INVALID_ADDR;
                         else begin 
                             InitPCEachSlots[w_addr[4:0]]<=w_data;
                             Finished[w_addr[4:0]]<=0;
+                            InitializeSimtStack[w_addr[4:0]]<=1;
                         end
                     end
                     11'b0000_0000_011:begin
-                        if(|w_addr[4:0]) Ir_CSR_INVALID_ADDR<=`INTERRUPT_CSR_METADATA_INVALID_ADDR;
+                        if(|w_addr[4:0]) Ir_CSR_INVALID_ADDR<=1;//`INTERRUPT_CSR_METADATA_INVALID_ADDR;
                         else ExecuteMask<=w_data[`NUM_WARP-1:0];
                     end
                     11'b0000_0000_100:begin
@@ -207,7 +214,7 @@ module csr_register_group(
                         NumWorkgroup<=w_data;
                     end
                     default:begin
-                        Ir_CSR_INVALID_ADDR<=`INTERRUPT_CSR_METADATA_INVALID_ADDR;
+                        Ir_CSR_INVALID_ADDR<=1;//`INTERRUPT_CSR_METADATA_INVALID_ADDR;
                     end
                 endcase
             end
@@ -239,7 +246,7 @@ module csr_register_group(
                     com_csr_next=com_csr_old & ~common_csr_data_i;
                 end
                 else begin
-                    Ir_CSR_INVALID_COMMON_CSR_OP<=`INTERRUPT_CSR_INVALID_COMMON_CSR_OP;
+                    Ir_CSR_INVALID_COMMON_CSR_OP<=1;//`INTERRUPT_CSR_INVALID_COMMON_CSR_OP;
                 end
             end
             else com_csr_next=com_csr_old;
@@ -257,7 +264,7 @@ module csr_register_group(
                     com_csr_next_inner=com_csr_old_inner & ~common_csr_data_i_inner;
                 end
                 else begin
-                    Ir_CSR_INVALID_COMMON_CSR_OP<=`INTERRUPT_CSR_INVALID_COMMON_CSR_OP;
+                    Ir_CSR_INVALID_COMMON_CSR_OP<=1;//`INTERRUPT_CSR_INVALID_COMMON_CSR_OP;
                 end
             end   
             else com_csr_next_inner=com_csr_old_inner;  
