@@ -1,18 +1,5 @@
 `include "sp_defines.svh"
 
-typedef struct packed {
-    logic [31:0] npc;
-    logic [31:0] rpc;
-    logic [`NUM_WARP-1:0] predicate; 
-} SimtStackItem;
-
-typedef enum logic[1:0] { 
-    IDLE,
-    RUNNING,
-    CHECK_AND_POP,
-    FINISH
-} SimtStackStates_t;
-
 module branch_unit #(parameter SIMT_STACK_DEPTH=16)(
     input clk,
     input rst_n,
@@ -118,6 +105,21 @@ module simt_stack #(parameter SIMT_STACK_DEPTH=16)(
     output valid_o,
     output logic [2:0] irq_o
 );
+    typedef struct packed {
+        logic [31:0] npc;
+        logic [31:0] rpc;
+        logic [`NUM_WARP-1:0] predicate; 
+    } SimtStackItem;
+
+    typedef enum logic[1:0] { 
+        IDLE,
+        RUNNING,
+        CHECK_AND_POP,
+        FINISH
+    } SimtStackStates_t;
+
+
+
     localparam STACK_PTR_WIDTH=$clog2(SIMT_STACK_DEPTH);
     // simt stack数据结构
     // 栈指针多一位，如果全是1则表示空的，最高位1别的位不是全1就是上溢

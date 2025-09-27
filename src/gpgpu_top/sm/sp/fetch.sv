@@ -1,117 +1,178 @@
-`include "common.svh"
-import common::*;
+`include "sp_defines.svh"
 module fetch(
     input clk,
     input rst_n,
-    input initialize,
-
-    input [31:0] next_pc[32],
-    input [4:0] warp_id[32],
-    input [31:0] warp_mask,
-    output logic [4:0] selected_warp_id,
-    output logic [31:0] selected_pc,
-
-    input s_tvalid,
-    output logic s_tready,
-    output logic m_tvalid,
-    output logic m_tlast,
-    output logic[31:0] err, // err[0] ERR_INVALID_WARP_MASK
-
-    output logic [4:0] warp_id_update_pc,
-    output logic m_tvalid_update_queue,
-    output logic m_tlast_update_queue,
-    input update_queue_valid
+    // 和ibuffer与scoreboard的交互
+    input [`NUM_WARP-1:0]           fetch_mask_i,
+    input                           fetch_valid_i,
+    output                          ready_o,
+    // 控制面来的执行掩码
+    input [`NUM_WARP-1:0]           execute_mask_i,
+    // 和分支模块的交互
+    input [`NUM_WARP-1:0]           npc_valid_mask_i,    
+    input [31:0]                    npc_i [`NUM_WARP],
+    input [`NUM_WARP-1:0]           branch_ready_i,
+    
+    output logic [`NUM_WARP-1:0]    update_rq_valid,
+    // 输出取指信息
+    input                           ready_icache,
+    output [31:0]                   npc_o,
+    output [`NUM_WARP-1:0]          warp_id_mask_o,
+    output                          tlast_o,
+    output                          valid_o
 );
-    logic [31:0] warp_mask_reg,_warp_mask_reg;
-    logic [4:0] last_idx;
-    logic [4:0] selected_id;
-    logic [4:0] id_this_term;
-    logic [31:0] pc_reg[32];
-    logic [4:0] warp_id_reg[32];
-    logic busy;
+    typedef enum logic[1:0] { 
+        IDLE,
+        WAITING_NPC,
+        SEND_RQ,
+        UPDATE
+    } State_t;
+    
+    State_t State;
+    logic Ready;
+    logic [31:0] Npc [`NUM_WARP];
 
-    logic [4:0] offset;
-    logic [31:0] grant_next;
-    logic [31:0] rotated_req;
-    logic [31:0] rotated_grant;
-    logic [31:0] unrotated_grant;
+    logic [`NUM_WARP-1:0] RQs;
+    logic [`NUM_WARP-1:0] UpdateRQs;
+
+    logic [`NUM_WARP-1:0] WarpIDMaskSend;
+    logic [31:0] NpcSend;
+    logic TLastSend;
+    logic TValidSend;
+
+    logic [`NUM_WARP-1:0] FetchMask;
+
+    assign FetchMask=execute_mask_i & fetch_mask_i;
+    assign npc_o=NpcSend;
+    assign warp_id_mask_o=WarpIDMaskSend;
+    assign tlast_o=TLastSend;
+    assign valid_o=TValidSend;
+
+    assign ready_o=Ready;
+
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
-            s_tready<=0;
-            selected_warp_id<=5'b0;
-            selected_pc<='0;
-            warp_mask_reg<=0;
-            last_idx<=5'b11111;
-            selected_id<=0;
-            m_tvalid<=0;
-            pc_reg<='{default:0};
-            warp_id_reg<='{default:0};
-            busy<=0;
-            err<=0;
-            m_tlast<=0;
-            warp_id_update_pc<=0;
-            m_tvalid_update_queue<=0;
-            m_tlast_update_queue<=0;
-        end 
-        else begin
-            err<=0;
-            if(initialize) begin
-                warp_id_reg<=warp_id;
-                pc_reg<=next_pc;
-                m_tvalid<=0;
-                s_tready<=update_queue_valid;
-                m_tlast<=0;
-            end
-            else if(update_queue_valid) begin
-                s_tready<=1;
-                m_tvalid<=0;
-                m_tlast<=0;
-                if(s_tready && s_tvalid) begin
-                    warp_mask_reg<=warp_mask;
-                    busy<=1;
-                    if(~(|warp_mask)) err<=err | `KIANA_SP_ERR_FETCHER_INVALID_WARP_MASK;
-                    s_tready<=0;
-                end
-                if(busy) begin
-                    _warp_mask_reg=warp_mask_reg;
-                    s_tready<=0;
-                    if(|_warp_mask_reg) begin
-                        offset=last_idx+1;
-                        rotated_req = (_warp_mask_reg >> offset) | (_warp_mask_reg << (32 - offset));
-                        rotated_grant = rotated_req & (~(rotated_req - 1));
-                        unrotated_grant = (rotated_grant << offset) | (rotated_grant >> (32 - offset));
-                        grant_next = unrotated_grant;
-                        for (int i = 0; i < 32; i++) begin
-                            if (grant_next[i])
-                                id_this_term = i;
-                        end
-                        _warp_mask_reg[id_this_term]=0;
-                        m_tlast<=~(|_warp_mask_reg);
-                        last_idx<=id_this_term;
-                        selected_id<=id_this_term;
-                        m_tvalid<=1'b1;
-                        selected_warp_id<=warp_id_reg[id_this_term];
-                        selected_pc<=pc_reg[id_this_term];
-                        pc_reg[id_this_term]<=next_pc[id_this_term];
-                        busy<=1;
+            State<=IDLE;
+            Ready<=1;
+            RQs<=0;
+            Npc<='{default:0};
+            UpdateRQs<=0;
 
-                        m_tlast_update_queue<=~(|_warp_mask_reg);
-                        warp_id_update_pc<=id_this_term;
-                        m_tvalid_update_queue<=1;
+            WarpIDMaskSend<=0;
+            NpcSend<=0;
+            TLastSend<=0;
+            TValidSend<=0;
+
+            update_rq_valid<=0;
+        end
+        else begin
+            case (State)
+                IDLE:begin
+                    RQs<=0;
+                    if(fetch_valid_i & (|FetchMask)) begin
+                        logic NeedToWaitNpc;
+                        UpdateRQs<=0;
+                        Ready<=0;
+                        NeedToWaitNpc=|(FetchMask & ~npc_valid_mask_i);
+                        RQs<=FetchMask;
+                        if(NeedToWaitNpc) begin
+                            State<=WAITING_NPC;
+                        end
+                        else begin
+                            State<=SEND_RQ;
+                            UpdateRQs<=FetchMask;
+                            Npc<=npc_i;
+                        end
                     end
                     else begin
-                        busy<=0;
-                        s_tready<=1;
-                        m_tvalid<=0;
+                        Ready<=1;
+                        State<=IDLE;
+                    end
+                    WarpIDMaskSend<=0;
+                    NpcSend<=0;
+                    TLastSend<=0;
+                    TValidSend<=0;
+                end
+                WAITING_NPC:begin
+                    logic NeedToWaitNpc;
+                    Ready<=0;
+                    NeedToWaitNpc=|(RQs & ~npc_valid_mask_i);
+                    if(NeedToWaitNpc) begin
+                        State<=WAITING_NPC;
+                    end
+                    else begin
+                        State<=SEND_RQ;
+                        UpdateRQs<=RQs;
+                        Npc<=npc_i;
+                    end
+                    WarpIDMaskSend<=0;
+                    NpcSend<=0;
+                    TLastSend<=0;
+                    TValidSend<=0;
+                end
+                SEND_RQ:begin
+                    logic [`NUM_WARP-1:0] WarpIDThisCycle,RQsNextCycle;
+                    Ready<=0;
+                    if(ready_icache) begin
+                        WarpIDThisCycle=RQs & (~RQs+1);
+                        RQsNextCycle=~WarpIDThisCycle & RQs;
+                        RQs<=RQsNextCycle;
+
+                        for(int i=0;i<`NUM_WARP;i++) begin
+                            if(WarpIDThisCycle[i]) NpcSend<=Npc[i];
+                        end
+                        WarpIDMaskSend<=WarpIDThisCycle;
+                        TValidSend<=1;
+                        if(~|RQsNextCycle) begin
+                            State<=UPDATE;
+                            TLastSend<=1;
+                        end 
+                        else begin 
+                            State<=SEND_RQ;
+                            TLastSend<=0;
+                        end
+                    end
+                    else begin
+                        RQs<=RQs;
+                        WarpIDMaskSend<=0;
+                        NpcSend<=0;
+                        TLastSend<=0;
+                        TValidSend<=0;
+                        
+                        State<=SEND_RQ;
                     end
                 end
-                warp_mask_reg<=_warp_mask_reg;
-            end
-            else begin
-                busy<=0;
-                s_tready<=0;
-                m_tvalid<=0;
-            end
+                UPDATE:begin
+                    logic UpdateRQsNextCycle;
+                    UpdateRQsNextCycle=UpdateRQs & ~branch_ready_i;
+                    UpdateRQs<=UpdateRQsNextCycle;
+
+                    update_rq_valid<=branch_ready_i & UpdateRQs;
+                    if(~|UpdateRQsNextCycle) begin
+                        State<=IDLE;
+                    end
+                    else begin
+                        State<=UPDATE;
+                    end
+
+                    WarpIDMaskSend<=0;
+                    NpcSend<=0;
+                    TLastSend<=0;
+                    TValidSend<=0;
+                    Ready<=0;
+                end
+                default:begin
+                    State<=IDLE;
+                    Ready<=1;
+                    RQs<=0;
+                    Npc<='{default:0};
+
+                    WarpIDMaskSend<=0;
+                    NpcSend<=0;
+                    TLastSend<=0;
+                    TValidSend<=0;
+                end
+            endcase
         end
     end
 endmodule
