@@ -1,222 +1,296 @@
-`include "../common/common.svh"
-import common::*;
-module decode(
-    input clk,
-    input rst_n,
-    input s_tvalid,
-    input [31:0] instruction,
-    input [4:0]  warp_id_in,
-    input s_tlast,
+`include "sp_defines.svh"
 
-    output logic [4:0] warp_id_out,
-    output logic m_tvalid,
-    output logic [4:0] rd,
-    output logic [4:0] rs1,
-    output logic [4:0] rs2,
-    output logic [7:0] opcode,
-    output logic [31:0] imm,
-    output logic m_tlast,
-    output logic [7:0] feature_flags, // [0]:alu [1]:lsu [2]:write_pc [3]:depends on pc [4]:write_pred [5]:depends on pred
-    output logic [31:0] err
+// typedef struct {
+//     logic [6:0] Opcode;
+//     logic [4:0] SrcReg1;
+//     logic [4:0] SrcReg2;
+//     logic [4:0] DstReg;
+//     logic [31:0] Imm;
+//     logic [2:0] Funct3;
+//     logic [6:0] Funct7;
+// } Instruction_t;
+module decoder(
+    input                   clk,
+    input                   rst_n,
+    // 输入
+    input                   tvalid_i,
+    input                   tlast_i,
+    input [`NUM_WARP-1:0]   warp_id_mask_i,
+    input [31:0]            instruction_i,
+    // 输出
+    output logic            tvalid_o,
+    output logic            tlast_o,
+    output Instruction_t    instruction_o,
+    output [`NUM_WARP-1:0]  warp_id_mask_o,
+    output [$clog2(`NUM_WARP)-1:0]   warp_id_o
 );
-    always_ff @(posedge clk or negedge rst_n) begin
+    always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
-            m_tvalid<=0;
-            rd<=0;
-            rs1<=0;
-            rs2<=0;
-            opcode<=8'hff;
-            imm<=0;
-            feature_flags<=0;
-            warp_id_out<=0; 
-            err<=0;
-            m_tlast<=0;
+            tvalid_o<=0;
+            tlast_o<=0;
+            warp_id_mask_o<=0;
+            warp_id_o<=0;
+            instruction_o.Opcode   <= 0;
+            instruction_o.SrcReg1  <= 0;
+            instruction_o.SrcReg2  <= 0;
+            instruction_o.DstReg   <= 0;
+            instruction_o.Imm      <= 0;
+            instruction_o.Csr      <= 0;
+            instruction_o.Funct3   <= 0;
+            instruction_o.AluOp    <= ALU_NOP;
+            instruction_o.LsuOp    <= LSU_NON;
+            instruction_o.BranchOp <= NOP;
+            instruction_o.ControlOp<= Ctrl_Non;
+            instruction_o.UnpredictablePC   <= 0;
+            instruction_o.UseALU   <= 0;
+            instruction_o.UseLSU   <= 0;
+            instruction_o.UseCtrl   <= 0;
+            instruction_o.UseBranch<=0;
         end
         else begin
-            m_tlast<=s_tlast;
-            warp_id_out<=warp_id_in;
-            if(s_tvalid) begin
-                case (instruction[6:0])
-                    7'b1100011: begin // B-type
-                        m_tvalid<=1;
-                        rs1<=instruction[19:15];
-                        rs2<=instruction[24:20];
-                        imm<={8'b0,instruction[31:26],2'b0,8'b0,instruction[25],instruction[11:7],2'b0};
-                        rd<='1;
-                        case (instruction[14:12])
-                            3'b000: opcode<=0;  
-                            3'b001: opcode<=1;  
-                            3'b100: opcode<=2;  
-                            3'b101: opcode<=3;  
-                            3'b110: opcode<=4;  
-                            3'b111: opcode<=5;  
-                            default: opcode<='1;
-                        endcase
-                        feature_flags<=8'b0011_1101;
-                    end 
-                    7'b0000011:begin // L-type
-                        m_tvalid<=1;
-                        rs1<=instruction[19:15];
-                        rs2<='1;
-                        imm<='1;
-                        rd<=instruction[11:7];
-                        case (instruction[14:12])
-                            3'b000: opcode<=6;  
-                            3'b001: opcode<=7;  
-                            3'b010: opcode<=8;  
-                            3'b100: opcode<=9;  
-                            3'b101: opcode<=10;  
-                            default: opcode<='1;
-                        endcase
-                        feature_flags<=8'b0010_1010;
+            tvalid_o<=tvalid_i;
+            tlast_o<=tlast_i;
+            warp_id_mask_o<=warp_id_mask_i;
+            warp_id_o<=onehot_to_bin_num_warp(warp_id_mask_i);
+            instruction_o.Opcode   <= 0;
+            instruction_o.SrcReg1  <= 0;
+            instruction_o.SrcReg2  <= 0;
+            instruction_o.DstReg   <= 0;
+            instruction_o.Imm      <= 0;
+            instruction_o.Csr      <= 0;
+            instruction_o.Funct3   <= 0;
+            instruction_o.AluOp    <= ALU_NOP;
+            instruction_o.LsuOp    <= LSU_NON;
+            instruction_o.BranchOp <= NOP;
+            instruction_o.ControlOp<= Ctrl_Non;
+            instruction_o.UnpredictablePC   <= 0;
+            instruction_o.UseALU   <= 0;
+            instruction_o.UseLSU   <= 0;
+            instruction_o.UseCtrl   <= 0;
+            instruction_o.UseBranch<=0;
+            case(instruction_i[6:0])
+                7'b0110111: begin // lui
+                    instruction_o.Opcode<=instruction_i[6:0];
+                    instruction_o.DstReg<=instruction_i[11:7];
+                    instruction_o.Imm<={instruction_i[31:12],12'b0};
+                    instruction_o.ControlOp<=Lui;
+                    instruction_o.UseCtrl   <= 1;
+                end
+                7'b0010111: begin // auipc
+                    instruction_o.Opcode<=instruction_i[6:0];
+                    instruction_o.DstReg<=instruction_i[11:7];
+                    instruction_o.Imm<={instruction_i[31:12],12'b0};
+                    instruction_o.ControlOp<=Auipc;
+                    instruction_o.UseCtrl   <= 1;
+                end
+                7'b1101111: begin // jal
+                    instruction_o.Opcode  <= instruction_i[6:0];
+                    instruction_o.DstReg  <= instruction_i[11:7];
+
+                    instruction_o.Imm <= {{11{instruction_i[31]}},
+                        instruction_i[31], instruction_i[19:12],
+                        instruction_i[20], instruction_i[30:21], 1'b0};
+                    instruction_o.BranchOp<=JUMP;
+                    instruction_o.UseBranch<=1;
+                    instruction_o.UnpredictablePC<=1;
+                end
+                7'b1100111: begin // jalr
+                    instruction_o.Opcode  <= instruction_i[6:0];
+                    instruction_o.SrcReg1 <= instruction_i[19:15];
+                    instruction_o.DstReg  <= instruction_i[11:7];
+                    instruction_o.Imm     <= {{20{instruction_i[31]}}, instruction_i[31:20]};
+                    instruction_o.Funct3  <= instruction_i[14:12];
+                    instruction_o.BranchOp<=JUMP;
+                    instruction_o.UseBranch<=1;
+                    instruction_o.UnpredictablePC<=1;
+                end
+                7'b1100011: begin // b-type
+                    instruction_o.Opcode  <= instruction_i[6:0];
+                    instruction_o.SrcReg1 <= instruction_i[19:15];
+                    instruction_o.SrcReg2 <= instruction_i[24:20];
+                    instruction_o.Funct3  <= instruction_i[14:12];
+                    instruction_o.Imm <= {{19{instruction_i[31]}},
+                        instruction_i[31], instruction_i[7],
+                        instruction_i[30:25], instruction_i[11:8], 1'b0};
+                    instruction_o.BranchOp<=BRANCH;
+                    instruction_o.UseBranch<=1;
+                    instruction_o.UnpredictablePC<=1;
+                end
+                7'b0000011: begin // LB/LH/LW/LBU/LHU
+                    instruction_o.Opcode  <= instruction_i[6:0];
+                    instruction_o.SrcReg1 <= instruction_i[19:15];
+                    instruction_o.DstReg  <= instruction_i[11:7];
+                    instruction_o.Imm     <= {{20{instruction_i[31]}}, instruction_i[31:20]};
+                    instruction_o.Funct3  <= instruction_i[14:12];
+                    case(instruction_i[14:12])
+                        3'b000: instruction_o.LsuOp<=LSU_LOAD_BYTE;
+                        3'b001: instruction_o.LsuOp<=LSU_LOAD_HALF_WORD;
+                        3'b010: instruction_o.LsuOp<=LSU_LOAD_WORD;
+                        3'b100: instruction_o.LsuOp<=LSU_LOAD_BYTE;
+                        3'b101: instruction_o.LsuOp<=LSU_LOAD_HALF_WORD;
+                        default: instruction_o.LsuOp<=LSU_NON;
+                    endcase
+                    instruction_o.UseLSU<=1;
+                end
+                7'b0100011: begin // SB/SH/SW
+                    instruction_o.Opcode  <= instruction_i[6:0];
+                    instruction_o.SrcReg1 <= instruction_i[19:15];
+                    instruction_o.SrcReg2 <= instruction_i[24:20];
+
+                    instruction_o.Imm <= {{20{instruction_i[31]}},
+                        instruction_i[31:25], instruction_i[11:7]};
+
+                    instruction_o.Funct3  <= instruction_i[14:12];
+                    case(instruction_i[14:12])
+                        3'b000: instruction_o.LsuOp<=LSU_STORE_BYTE;
+                        3'b001: instruction_o.LsuOp<=LSU_STORE_HALF_WORD;
+                        3'b010: instruction_o.LsuOp<=LSU_STORE_WORD;
+                        default: instruction_o.LsuOp<=LSU_NON;
+                    endcase
+                    instruction_o.UseLSU<=1;
+                end
+                7'b0010011: begin // 立即数运算
+                    instruction_o.Opcode  <= instruction_i[6:0];
+                    instruction_o.SrcReg1 <= instruction_i[19:15];
+                    instruction_o.DstReg  <= instruction_i[11:7];
+                    instruction_o.Funct3  <= instruction_i[14:12];
+                    instruction_o.UseALU<=1;
+                    case (instruction_i[14:12])
+                        3'b001, 3'b101: begin // SLLI / SRLI / SRAI
+                            instruction_o.Imm    <= {27'b0, instruction_i[24:20]};
+                        end
+                        default: begin
+                            instruction_o.Imm    <= {{20{instruction_i[31]}}, instruction_i[31:20]};
+                        end
+                    endcase
+                    case (instruction_i[14:12])
+                        3'b000: instruction_o.AluOp<=ALU_ADD;
+                        3'b010: instruction_o.AluOp<=ALU_SLT;
+                        3'b011: instruction_o.AluOp<=ALU_SLTU;
+                        3'b100: instruction_o.AluOp<=ALU_XOR;
+                        3'b110: instruction_o.AluOp<=ALU_OR;
+                        3'b111: instruction_o.AluOp<=ALU_AND;
+                        3'b001: instruction_o.AluOp<=ALU_SLL;
+                        3'b101: begin
+                            if(instruction_i[30]) instruction_o.AluOp<=ALU_SRA;
+                            else instruction_o.AluOp<=ALU_SRL;
+                        end
+                        default: instruction_o.AluOp<=ALU_NOP;
+                    endcase
+                end
+                7'b0110011: begin // 寄存器运算
+                    instruction_o.Opcode  <= instruction_i[6:0];
+                    instruction_o.SrcReg1 <= instruction_i[19:15];
+                    instruction_o.SrcReg2 <= instruction_i[24:20];
+                    instruction_o.DstReg  <= instruction_i[11:7];
+                    instruction_o.UseALU<=1;
+                    case (instruction_i[14:12])
+                        3'b000: begin
+                            if(instruction_i[30]) instruction_o.AluOp<=ALU_SUB;
+                            else instruction_o.AluOp<=ALU_ADD;
+                        end
+                        3'b001: instruction_o.AluOp<=ALU_SLL;
+                        3'b010: instruction_o.AluOp<=ALU_SLT;
+                        3'b011: instruction_o.AluOp<=ALU_SLTU;
+                        3'b100: instruction_o.AluOp<=ALU_XOR;
+                        3'b110: instruction_o.AluOp<=ALU_OR;
+                        3'b111: instruction_o.AluOp<=ALU_AND;
+                        3'b101: begin
+                            if(instruction_i[30]) instruction_o.AluOp<=ALU_SRA;
+                            else instruction_o.AluOp<=ALU_SRL;
+                        end
+                        default: instruction_o.AluOp<=ALU_NOP;
+                    endcase
+                    instruction_o.Funct3  <= instruction_i[14:12];
+                end
+                7'b0001111: begin // 内存屏障
+                    instruction_o.Opcode  <= instruction_i[6:0];
+                    instruction_o.Imm     <= {24'b0,instruction_i[27:20]};
+
+                    instruction_o.Funct3  <= 0;
+                    instruction_o.ControlOp     <=Fence;
+                    instruction_o.UseCtrl   <= 1;
+                end
+                7'b0000010: begin // 自定义指令
+                    instruction_o.Opcode  <= instruction_i[6:0];
+                    instruction_o.SrcReg1 <= instruction_i[19:15];
+                    if(instruction_i[14:12]==3'b111) begin
+                        instruction_o.Imm     <= {{14{instruction_i[31]}},instruction_i[31:20],instruction_i[11:7],1'b0};
+                        instruction_o.BranchOp<=SETRPC;
+                        instruction_o.UseBranch<=1;
+                        instruction_o.UnpredictablePC<=1;
                     end
-                    7'b0100011:begin // S-type
-                        m_tvalid<=1;
-                        rs1<=instruction[19:15];
-                        rs2<=instruction[24:20];
-                        imm<='1;
-                        rd<='1;
-                        case (instruction[14:12])
-                            3'b000: opcode<=11;  
-                            3'b001: opcode<=12;  
-                            3'b010: opcode<=13;  
-                            default: opcode<='1;
-                        endcase
-                        feature_flags<=8'b0010_1010;
+                    else if(instruction_i[14:12]==3'b101) begin
+                        instruction_o.Imm     <= {{10{instruction_i[31]}},instruction_i[31:15],instruction_i[11:7]};
+                        instruction_o.BranchOp<=PUSH;
+                        instruction_o.UseBranch<=1;
+                        instruction_o.UnpredictablePC<=1;
                     end
-                    7'b0010011:begin // I-type
-                        m_tvalid<=1;
-                        rs1<=instruction[19:15];
-                        rs2<='1;
-                        case ({instruction[31:25],instruction[14:12]})
-                            10'b0000000_000: imm<={{20{instruction[31]}},instruction[31:20]};  
-                            10'b0000000_010: imm<={{20{instruction[31]}},instruction[31:20]};  
-                            10'b0000000_011: imm<={20'b0,instruction[31:20]};  
-                            10'b0000000_100: imm<={{20{instruction[31]}},instruction[31:20]};  
-                            10'b0000000_110: imm<={{20{instruction[31]}},instruction[31:20]};  
-                            10'b0000000_111: imm<={{20{instruction[31]}},instruction[31:20]};  
-                            10'b0000000_001: imm<={27'b0,instruction[24:20]};  
-                            10'b0000000_101: imm<={27'b0,instruction[24:20]};  
-                            10'b0100000_101: imm<={{27{instruction[24]}},instruction[24:20]};  
-                            default: imm<='1;
-                        endcase
-                        rd<=instruction[11:7];
-                        case ({instruction[31:25],instruction[14:12]})
-                            10'b0000000_000: opcode<=14;
-                            10'b0000000_010: opcode<=15;
-                            10'b0000000_011: opcode<=16;
-                            10'b0000000_100: opcode<=17;
-                            10'b0000000_110: opcode<=18;
-                            10'b0000000_111: opcode<=19;
-                            10'b0000000_001: opcode<=20;
-                            10'b0000000_101: opcode<=21;
-                            10'b0100000_101: opcode<=22;
-                            default: opcode<='1;
-                        endcase
-                        feature_flags<=8'b0010_1001;
+                    else if(instruction_i[14:12]==3'b110) begin
+                        instruction_o.BranchOp<=POP;
+                        instruction_o.UseBranch<=1;
+                        instruction_o.UnpredictablePC<=1;
                     end
-                    7'b0110011:begin // R-type
-                        m_tvalid<=1;
-                        rs1<=instruction[19:15];
-                        rs2<=instruction[24:20];
-                        imm<='1;
-                        rd<=instruction[11:7];
-                        case ({instruction[31:25],instruction[14:12]})
-                            10'b0000000_000: opcode<=23;
-                            10'b0100000_000: opcode<=24;
-                            10'b0000000_001: opcode<=25;
-                            10'b0000000_010: opcode<=26;
-                            10'b0000000_011: opcode<=27;
-                            10'b0000000_100: opcode<=28;
-                            10'b0000000_101: opcode<=29;
-                            10'b0100000_101: opcode<=30;
-                            10'b0000000_110: opcode<=31;
-                            10'b0000000_111: opcode<=32;
-                            default: opcode<='1;
-                        endcase
-                        feature_flags<=8'b0010_1001;
+                    else if(instruction_i[14:12]==3'b010) begin
+                        instruction_o.BranchOp<=FLUSH;
+                        instruction_o.UseBranch<=1;
+                        instruction_o.UnpredictablePC<=1;
                     end
-                    7'b0001111:begin // I-type
-                        m_tvalid<=1;
-                        rs1<='1;
-                        rs2<='1;
-                        rd<='1;
-                        imm<='1;
-                        case (instruction[14:12])
-                            3'b000: opcode<=33;  
-                            3'b001: opcode<=34;  
-                            3'b010: opcode<=35;  
-                            default: opcode<='1;
-                        endcase
-                        case (instruction[14:12])
-                            3'b000: feature_flags<=8'b0000_1000;
-                            3'b001: feature_flags<=8'b0000_1010;  
-                            3'b010: feature_flags<=8'b0000_1000;
-                            default: feature_flags<=8'b0000_0000;
-                        endcase
+                    else instruction_o.Imm<=0;
+                        
+                    if(instruction_i[14:12]==3'b001) begin
+                        instruction_o.ControlOp<=SoftIr;
+                        instruction_o.UseCtrl   <= 1;
                     end
-                    7'b1101111:begin // J-type jal
-                        m_tvalid<=1;
-                        rs1<='1;
-                        rs2<='1;
-                        rd<=instruction[11:7];
-                        imm<={10'b0,instruction[31:12],2'b0};
-                        opcode<=36;
-                        feature_flags<=8'b0000_1101;
+                    else if(instruction_i[14:12]==3'b000) begin
+                        if(instruction_i[24:20]==0) instruction_o.ControlOp<=SyncWorkGroup;
+                        else if(instruction_i[24:20]==1) instruction_o.ControlOp<=SyncWarp;
+                        else if(instruction_i[24:20]==2) instruction_o.ControlOp<=SyncGlobal;
+                        instruction_o.UseCtrl   <= 1;
                     end
-                    7'b1100111:begin // J-type jalr
-                        m_tvalid<=1;
-                        rs1<=instruction[19:15];
-                        rs2<='1;
-                        rd<=instruction[11:7];
-                        imm<={18'b0,instruction[31:20],2'b0};
-                        opcode<=37;
-                        feature_flags<=8'b0000_1101;
+                    else if(instruction_i[14:12]==3'b100) begin
+                        instruction_o.ControlOp<=Ret;   
+                        instruction_o.UseCtrl   <= 1;
                     end
-                    7'b0110111:begin // U-type lui
-                        m_tvalid<=1;
-                        rs1<='1;
-                        rs2<='1;
-                        rd<=instruction[11:7];
-                        imm<={instruction[31:12],12'b0};
-                        opcode<=38;
-                        feature_flags<=8'b0010_1000;
-                    end
-                    7'b0010111:begin // U-type auipc
-                        m_tvalid<=1;
-                        rs1<='1;
-                        rs2<='1;
-                        rd<=instruction[11:7];
-                        imm<={instruction[31:12],12'b0};
-                        opcode<=39;
-                        feature_flags<=8'b0010_1000;
-                    end
-                    7'b1110011:begin // P-type
-                        m_tvalid<=1;
-                        rs1<='1;
-                        rs2<='1;
-                        rd<='1;
-                        if(instruction[14:12]==3'b101) imm<={3'b0,instruction[31:21],2'b0,3'b0,instruction[20:15],instruction[11:7],2'b0};
-                        else imm<='1;
-                        case (instruction[14:12])
-                            3'b101: opcode<=40;  
-                            3'b110: opcode<=41;  
-                            3'b111: opcode<=42;
-                            default: opcode<='1;
-                        endcase
-                        case (instruction[14:12])
-                            3'b101: feature_flags<=8'b0011_1100;
-                            3'b110: feature_flags<=8'b0011_1100; 
-                            3'b111: feature_flags<=8'b0011_1100; 
-                            default: feature_flags<=8'b0000_0000;
-                        endcase
-                    end
-                    default: begin
-                        m_tvalid<=0;
-                        err<=`KIANA_SP_ERR_DECODER_WRONG_INSTRUCTION_FORMAT;
-                    end
-                endcase
-            end
+                    instruction_o.Funct3  <= instruction_i[14:12];
+                end
+                7'b1110011: begin // CSR
+                    instruction_o.Opcode    <= instruction_i[6:0];
+                    instruction_o.SrcReg1   <= instruction_i[19:15];
+                    instruction_o.DstReg    <= instruction_i[11:7];
+                    instruction_o.Imm       <= {27'b0,instruction_i[19:15]};
+
+                    instruction_o.Funct3    <= instruction_i[14:12];
+                    instruction_o.Csr       <= instruction_i[31:20];
+                    instruction_o.UseCtrl   <= 1;
+                    case (instruction_i[14:12])
+                        3'b001: instruction_o.ControlOp<=CsrRw;
+                        3'b010: instruction_o.ControlOp<=CsrRs;
+                        3'b011: instruction_o.ControlOp<=CsrRc;
+                        3'b101: instruction_o.ControlOp<=CsrRwi;
+                        3'b110: instruction_o.ControlOp<=CsrRsi;
+                        3'b111: instruction_o.ControlOp<=CsrRci;
+                    endcase
+                end
+                default: begin
+                    instruction_o.Opcode   <= 0;
+                    instruction_o.SrcReg1  <= 0;
+                    instruction_o.SrcReg2  <= 0;
+                    instruction_o.DstReg   <= 0;
+                    instruction_o.Imm      <= 0;
+                    instruction_o.Csr      <= 0;
+                    instruction_o.Funct3   <= 0;
+                    instruction_o.AluOp    <= ALU_NOP;
+                    instruction_o.LsuOp    <= LSU_NON;
+                    instruction_o.BranchOp <= NOP;
+                    instruction_o.ControlOp<= Ctrl_Non;
+                    instruction_o.UnpredictablePC   <= 0;
+                    instruction_o.UseALU   <= 0;
+                    instruction_o.UseLSU   <= 0;
+                    instruction_o.UseCtrl   <= 0;
+                    instruction_o.UseBranch<=0;
+                end
+            endcase
         end
     end
 endmodule 
